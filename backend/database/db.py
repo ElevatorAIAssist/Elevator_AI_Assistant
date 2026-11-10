@@ -84,6 +84,48 @@ def init_db():
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_alert_time ON alerts(timestamp)")
 
+        # 4. Device Boot Session Registry (Phase 2B)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS device_boot_sessions (
+                session_uuid TEXT PRIMARY KEY,
+                device_id TEXT NOT NULL,
+                boot_id TEXT NOT NULL,
+                generation_id INTEGER NOT NULL,
+                fw_version TEXT NOT NULL,
+                status TEXT NOT NULL CHECK(status IN ('ACTIVE', 'RETIRED', 'CORRUPT_DESYNC', 'OUTAGE_AMBIGUITY')),
+                t_anchor REAL NOT NULL,
+                initial_raw_elapsed_ms INTEGER NOT NULL,
+                created_at REAL NOT NULL,
+                retired_at REAL,
+                CONSTRAINT uq_device_boot UNIQUE(device_id, boot_id)
+            )
+        """)
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_device_generation ON device_boot_sessions(device_id, generation_id)")
+
+        # 5. Dedicated Hardware Sensor Readings (Phase 2B)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS hardware_sensor_readings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp REAL NOT NULL,
+                device_id TEXT NOT NULL,
+                boot_id TEXT NOT NULL,
+                packet_id INTEGER NOT NULL,
+                rollover_epoch INTEGER NOT NULL,
+                raw_elapsed_ms INTEGER NOT NULL,
+                extended_elapsed_ms INTEGER NOT NULL,
+                server_receipt_timestamp REAL NOT NULL,
+                water_temp_c REAL NOT NULL,
+                led_current_ma REAL NOT NULL,
+                vibration_events_per_sec REAL NOT NULL,
+                disc_rpm REAL NOT NULL,
+                operating_state TEXT NOT NULL,
+                diagnostic_status TEXT DEFAULT 'NORMAL',
+                raw_packet TEXT
+            )
+        """)
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_hw_device_packet ON hardware_sensor_readings(device_id, boot_id, packet_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_hw_timestamp ON hardware_sensor_readings(timestamp)")
+
         conn.commit()
 
 
@@ -229,6 +271,67 @@ def clear_alerts():
         cursor = conn.cursor()
         cursor.execute("DELETE FROM alerts")
         conn.commit()
+
+
+# ============================================================================
+# Hardware Demonstration Rig Telemetry Queries (Phase 2B)
+# ============================================================================
+
+def get_latest_hardware_reading() -> Optional[Dict[str, Any]]:
+    """Retrieve the single latest accepted physical rig telemetry reading."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM hardware_sensor_readings ORDER BY timestamp DESC, id DESC LIMIT 1;"
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return dict(row)
+
+
+def get_hardware_telemetry_history(limit: int = 50) -> List[Dict[str, Any]]:
+    """Retrieve historical physical rig telemetry readings in chronological order."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM hardware_sensor_readings ORDER BY timestamp DESC, id DESC LIMIT ?;",
+            (limit,)
+        )
+        rows = cursor.fetchall()
+        return [dict(r) for r in reversed(rows)]
+
+
+def save_hardware_sensor_reading(record: Dict[str, Any]) -> int:
+    """Durably persist an accepted physical rig telemetry reading."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO hardware_sensor_readings (
+                timestamp, device_id, boot_id, packet_id, rollover_epoch,
+                raw_elapsed_ms, extended_elapsed_ms, server_receipt_timestamp,
+                water_temp_c, led_current_ma, vibration_events_per_sec, disc_rpm,
+                operating_state, diagnostic_status, raw_packet
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """, (
+            record["timestamp"],
+            record["device_id"],
+            record["boot_id"],
+            record["packet_id"],
+            record["rollover_epoch"],
+            record["raw_elapsed_ms"],
+            record["extended_elapsed_ms"],
+            record["server_receipt_timestamp"],
+            record["water_temp_c"],
+            record["led_current_ma"],
+            record["vibration_events_per_sec"],
+            record["disc_rpm"],
+            record["operating_state"],
+            record.get("diagnostic_status", "NORMAL"),
+            record.get("raw_packet", "{}")
+        ))
+        conn.commit()
+        return cursor.lastrowid
 
 
 # Auto-initialize on import

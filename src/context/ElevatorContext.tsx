@@ -16,40 +16,47 @@ import {
 import { evaluateSensors } from '../services/faultDetectionEngine';
 import { API_SERVICE, MockHardwareMode } from '../services/apiService';
 
+
+
 export const DEFAULT_THRESHOLDS: SensorThresholds = {
-  temperatureWarning: 60.0,
-  temperatureCritical: 75.0,
-  currentWarning: 5.0,
-  currentCritical: 7.0,
-  vibrationWarning: 4.0,
-  vibrationCritical: 7.0,
-  speedMaxNormal: 1.75,
-  speedCritical: 2.20,
+  temperatureWarning: 35.0,
+  temperatureCritical: 45.0,
+  currentWarning: 7.0,
+  currentCritical: 9.0,
+  vibrationLow: 45.0,
+  vibrationWarning: 90.0,
+  vibrationCritical: 135.0,
+  speedMaxNormal: 60.0,
+  speedCritical: 120.0,
   doorHazardSpeedLimit: 0.10
 };
 
+
+
 export const NOMINAL_SENSORS: SensorData = {
   timestamp: Date.now(),
-  temperature: 42.0,
-  current: 3.2,
-  vibration: 1.8,
-  speed: 1.25,
+  temperature: 25.0,
+  current: 4.5,
+  vibration: 55.0,
+  speed: 30.0,
   doorClosed: true,
   floor: 4,
   direction: 'up'
 };
 
+
+
 export const SIMULATION_PRESETS: SimulationPreset[] = [
   {
     id: 'nominal',
     name: 'Normal Baseline',
-    description: 'All subsystems within optimal nominal operating parameters.',
+    description: 'All physical sensors within optimal nominal operating thresholds.',
     targetSeverity: 'normal',
     values: {
-      temperature: 42.0,
-      current: 3.2,
-      vibration: 1.8,
-      speed: 1.25,
+      temperature: 25.0,
+      current: 4.5,
+      vibration: 55.0,
+      speed: 30.0,
       doorClosed: true,
       floor: 3,
       direction: 'up'
@@ -57,14 +64,14 @@ export const SIMULATION_PRESETS: SimulationPreset[] = [
   },
   {
     id: 'warning_bearing',
-    name: 'Warning: Bearing Friction',
-    description: 'Elevated machine vibration and moderate temperature rise indicative of early raceway wear.',
+    name: 'Warning: Friction & Vibration',
+    description: 'Elevated machine vibration (110 ev/s) and current (8.0 mA) within warning envelope.',
     targetSeverity: 'warning',
     values: {
-      temperature: 63.5,
-      current: 5.3,
-      vibration: 4.6,
-      speed: 1.2,
+      temperature: 38.0,
+      current: 8.0,
+      vibration: 110.0,
+      speed: 80.0,
       doorClosed: true,
       floor: 6,
       direction: 'up'
@@ -72,14 +79,14 @@ export const SIMULATION_PRESETS: SimulationPreset[] = [
   },
   {
     id: 'critical_thermal',
-    name: 'Critical: Motor Thermal Overload',
-    description: 'Severe stator temperature escalation above 75°C with high current draw.',
+    name: 'Critical: Thermal Overload',
+    description: 'Severe water temperature escalation (> 45°C critical limit) with moderate current draw.',
     targetSeverity: 'critical',
     values: {
-      temperature: 81.5,
-      current: 7.8,
-      vibration: 3.8,
-      speed: 0.85,
+      temperature: 50.0,
+      current: 8.0,
+      vibration: 60.0,
+      speed: 30.0,
       doorClosed: true,
       floor: 9,
       direction: 'up'
@@ -87,14 +94,14 @@ export const SIMULATION_PRESETS: SimulationPreset[] = [
   },
   {
     id: 'critical_vibration',
-    name: 'Critical: Mechanical Bearing Seizure',
-    description: 'Catastrophic bearing vibration (> 7.5 mm/s) with extreme frictional heat buildup.',
+    name: 'Critical: Mechanical Seizure',
+    description: 'Catastrophic frame vibration (> 135 ev/s critical limit) with high electrical load (> 9 mA).',
     targetSeverity: 'critical',
     values: {
-      temperature: 77.0,
-      current: 6.8,
-      vibration: 8.2,
-      speed: 0.6,
+      temperature: 38.0,
+      current: 9.5,
+      vibration: 145.0,
+      speed: 45.0,
       doorClosed: true,
       floor: 5,
       direction: 'idle'
@@ -106,10 +113,10 @@ export const SIMULATION_PRESETS: SimulationPreset[] = [
     description: 'Car door open while elevator car is actively traveling in hoistway.',
     targetSeverity: 'critical',
     values: {
-      temperature: 44.0,
-      current: 3.6,
-      vibration: 2.1,
-      speed: 1.35,
+      temperature: 28.0,
+      current: 6.0,
+      vibration: 55.0,
+      speed: 35.0,
       doorClosed: false, // OPEN during motion!
       floor: 7,
       direction: 'down'
@@ -117,20 +124,22 @@ export const SIMULATION_PRESETS: SimulationPreset[] = [
   },
   {
     id: 'overspeed_trip',
-    name: 'Critical: Drive Overspeed Trip',
-    description: 'Car velocity exceeds governor trip threshold (> 2.2 m/s).',
+    name: 'Critical: Disc Overspeed Trip',
+    description: 'Rotational disc speed exceeds critical trip threshold (> 120 RPM).',
     targetSeverity: 'critical',
     values: {
-      temperature: 52.0,
-      current: 5.9,
-      vibration: 4.8,
-      speed: 2.45,
+      temperature: 32.0,
+      current: 8.0,
+      vibration: 60.0,
+      speed: 135.0,
       doorClosed: true,
       floor: 2,
       direction: 'down'
     }
   }
 ];
+
+
 
 export interface TelemetryPoint {
   timeStr: string;
@@ -142,10 +151,13 @@ export interface TelemetryPoint {
   status: SystemStatus;
 }
 
+
+
 interface ElevatorContextType {
   sensors: SensorData;
   thresholds: SensorThresholds;
   systemStatus: SystemStatus;
+  operatingState: string;
   activeFaults: DetectedFault[];
   motorHealth: MotorHealthMetrics;
   telemetryHistory: TelemetryPoint[];
@@ -180,10 +192,16 @@ interface ElevatorContextType {
   carShaftAnimationProgress: number; // 0 - 100 for elevator shaft graphic
 }
 
+
+
 const ElevatorContext = createContext<ElevatorContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_THRESHOLDS_KEY = 'elevator_assistant_thresholds_v1';
+
+
+const LOCAL_STORAGE_THRESHOLDS_KEY = 'elevator_assistant_thresholds_v2';
 const LOCAL_STORAGE_ALERTS_KEY = 'elevator_assistant_alerts_v1';
+
+
 
 export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Load persisted thresholds
@@ -198,6 +216,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
     return DEFAULT_THRESHOLDS;
   });
+
+
 
   // Load persisted alert history
   const [alertHistory, setAlertHistory] = useState<AlertHistoryItem[]>(() => {
@@ -237,6 +257,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     ];
   });
 
+
+
   const [sensors, setSensors] = useState<SensorData>(NOMINAL_SENSORS);
   const [operatingMode, setOperatingMode] = useState<OperatingMode>('simulation');
   const [isSimulatingNoise, setIsSimulatingNoise] = useState<boolean>(true);
@@ -244,13 +266,19 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [activePresetId, setActivePresetId] = useState<string | null>('nominal');
   const [carShaftAnimationProgress, setCarShaftAnimationProgress] = useState<number>(35);
 
+
+
   // Backend & Hardware Connection State
   const [hardwareConnected, setHardwareConnected] = useState<boolean>(false);
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
   const [mockHardwareStatus, setMockHardwareStatusState] = useState<MockHardwareMode>(() => API_SERVICE.getMockHardwareStatus());
 
+
+
   // Backend ML & RCA Diagnostics state
   const [backendDiagnosis, setBackendDiagnosis] = useState<BackendDiagnosisData | null>(null);
+
+
 
   const setMockHardwareStatus = (mode: MockHardwareMode) => {
     API_SERVICE.setMockHardwareStatus(mode);
@@ -262,6 +290,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
+
+
   // Derive dynamic telemetry connection state
   const connectionState: TelemetryConnectionState = useMemo(() => {
     if (operatingMode === 'simulation') {
@@ -271,6 +301,37 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       return hardwareConnected && !isStreamingPaused ? 'hardware_connected' : 'disconnected';
     }
   }, [operatingMode, isStreamingPaused, hardwareConnected]);
+
+
+
+  // When switching to real_hardware mode without an active connection, immediately zero all sensor values
+  useEffect(() => {
+    if (operatingMode === 'real_hardware' && !hardwareConnected) {
+      setSensors(prev => {
+        if (prev.temperature === 0 && prev.current === 0 && prev.vibration === 0 && prev.speed === 0) {
+          return prev;
+        }
+        return {
+          timestamp: Date.now(),
+          temperature: 0,
+          current: 0,
+          vibration: 0,
+          speed: 0,
+          doorClosed: false,
+          floor: 1,
+          direction: 'idle'
+        };
+      });
+    } else if (operatingMode === 'simulation') {
+      const preset = SIMULATION_PRESETS.find(p => p.id === (activePresetId || 'nominal')) || SIMULATION_PRESETS[0];
+      setSensors({
+        ...preset.values,
+        timestamp: Date.now()
+      });
+    }
+  }, [operatingMode, hardwareConnected, activePresetId]);
+
+
 
   // Buffer of last 30 telemetry points for line charts
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>(() => {
@@ -283,63 +344,159 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       initial.push({
         timeStr,
         timestamp: ts,
-        temperature: +(42.0 + (Math.random() - 0.5) * 0.8).toFixed(1),
-        current: +(3.2 + (Math.random() - 0.5) * 0.15).toFixed(2),
-        vibration: +(1.8 + (Math.random() - 0.5) * 0.2).toFixed(2),
-        speed: 1.25,
+        temperature: +(25.0 + (Math.random() - 0.5) * 0.8).toFixed(1),
+        current: +(4.5 + (Math.random() - 0.5) * 0.4).toFixed(2),
+        vibration: +(55.0 + (Math.random() - 0.5) * 4.0).toFixed(1),
+        speed: +(30.0 + (Math.random() - 0.5) * 2.0).toFixed(1),
         status: 'normal'
       });
     }
     return initial;
   });
 
+  // Track latest hardware packet identity to avoid duplicate history filling
+  const lastHwPacketIdRef = useRef<number | string | null>(null);
+  const lastHwTimestampRef = useRef<number | null>(null);
+
+  // Synchronize authentic historical records from database when in real_hardware mode
+  useEffect(() => {
+    if (operatingMode !== 'real_hardware') return;
+    let isCancelled = false;
+
+    API_SERVICE.getHardwareTelemetryHistory(30).then(rows => {
+      if (isCancelled || !rows || rows.length === 0) return;
+      const points: TelemetryPoint[] = rows.map((r: any) => {
+        const rawTs = r.timestamp || r.server_receipt_timestamp || Date.now() / 1000;
+        const ts = rawTs > 10000000000 ? Math.floor(rawTs) : Math.floor(rawTs * 1000);
+        const d = new Date(ts);
+        const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+        return {
+          timeStr,
+          timestamp: ts,
+          temperature: typeof r.water_temp_c === 'number' ? +r.water_temp_c.toFixed(2) : 0,
+          current: typeof r.led_current_ma === 'number' ? +r.led_current_ma.toFixed(2) : 0,
+          vibration: typeof r.vibration_events_per_sec === 'number' ? +r.vibration_events_per_sec.toFixed(2) : 0,
+          speed: typeof r.disc_rpm === 'number' ? +r.disc_rpm.toFixed(2) : 0,
+          status: (r.diagnostic_status?.toLowerCase() === 'normal' || !r.diagnostic_status) ? 'normal' : 'warning'
+        };
+      });
+
+      setTelemetryHistory(points);
+      const latest = rows[rows.length - 1];
+      if (latest) {
+        lastHwPacketIdRef.current = latest.packet_id ?? null;
+        lastHwTimestampRef.current = latest.timestamp ?? null;
+        setSensors(prev => ({
+          ...prev,
+          timestamp: latest.timestamp > 10000000000 ? latest.timestamp : Math.floor(latest.timestamp * 1000),
+          temperature: latest.water_temp_c ?? prev.temperature,
+          current: latest.led_current_ma ?? prev.current,
+          vibration: latest.vibration_events_per_sec ?? prev.vibration,
+          speed: latest.disc_rpm ?? prev.speed,
+          doorClosed: null as any,
+          floor: null as any,
+          direction: null as any
+        }));
+      }
+    }).catch(() => {});
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [operatingMode]);
+
+
+
   // Evaluate faults dynamically (combines rule engine with backend RCA if present)
   const localEvaluation = useMemo(() => {
     return evaluateSensors(sensors, thresholds);
   }, [sensors, thresholds]);
 
-  // Active faults and motor health: prefer backend diagnosis if in backend mode and available
+
+
+  const [hardwareOperatingState, setHardwareOperatingState] = useState<string>('IDLE');
+
+
+
+  // Operating State (IDLE / RUNNING / STANDBY) separate from System Condition (NORMAL / WARNING / CRITICAL)
+  const operatingState = useMemo(() => {
+    if (operatingMode === 'real_hardware') {
+      if (!hardwareConnected) return 'STANDBY';
+      return hardwareOperatingState || (sensors.speed > 0 ? 'RUNNING' : 'IDLE');
+    }
+    return sensors.speed > 0 ? 'RUNNING' : 'IDLE';
+  }, [operatingMode, hardwareConnected, hardwareOperatingState, sensors.speed]);
+
+
+
+  // Active faults: evaluated dynamically from active sensor readings against configured thresholds
   const activeFaults = useMemo(() => {
-    if (operatingMode === 'real_hardware' && backendDiagnosis?.rca && backendDiagnosis.rca.length > 0) {
-      return backendDiagnosis.rca;
+    if (operatingMode === 'real_hardware' && !hardwareConnected) {
+      return [];
     }
     return localEvaluation.faults;
-  }, [operatingMode, backendDiagnosis, localEvaluation.faults]);
+  }, [operatingMode, hardwareConnected, localEvaluation.faults]);
 
+
+
+  // Overall system condition: follows the most severe sensor status (CRITICAL > WARNING > NORMAL)
   const systemStatus: SystemStatus = useMemo(() => {
-    if (operatingMode === 'real_hardware' && backendDiagnosis?.systemStatus) {
-      return backendDiagnosis.systemStatus;
+    if (operatingMode === 'real_hardware' && !hardwareConnected) {
+      return 'warning'; // Disconnected / stale hardware displays warning status
     }
     return localEvaluation.status;
-  }, [operatingMode, backendDiagnosis, localEvaluation.status]);
+  }, [operatingMode, hardwareConnected, localEvaluation.status]);
 
+
+
+  // System Health metrics: recalculated dynamically whenever underlying readings change
   const motorHealth = useMemo(() => {
-    if (operatingMode === 'real_hardware' && backendDiagnosis?.motorHealth) {
-      return backendDiagnosis.motorHealth;
+    if (operatingMode === 'real_hardware' && !hardwareConnected) {
+      return {
+        overallHealthScore: 0,
+        thermalStressScore: 0,
+        electricalStressScore: 0,
+        mechanicalVibrationScore: 0,
+        status: 'warning' as SystemStatus
+      };
     }
     return localEvaluation.motorHealth;
-  }, [operatingMode, backendDiagnosis, localEvaluation.motorHealth]);
+  }, [operatingMode, hardwareConnected, localEvaluation.motorHealth]);
+
+
 
   const mlAnomaly: AnomalyDetectionData | null = useMemo(() => {
+    if (operatingMode === 'real_hardware') return null; // ML models run strictly on simulated elevator
     return backendDiagnosis?.anomaly || null;
-  }, [backendDiagnosis]);
+  }, [operatingMode, backendDiagnosis]);
+
+
 
   const mlFaultClassification: FaultClassificationData | null = useMemo(() => {
+    if (operatingMode === 'real_hardware') return null; // ML models run strictly on simulated elevator
     return backendDiagnosis?.faultClassification || null;
-  }, [backendDiagnosis]);
+  }, [operatingMode, backendDiagnosis]);
+
+
 
   const backendRCA: DetectedFault[] = useMemo(() => {
     return backendDiagnosis?.rca || [];
   }, [backendDiagnosis]);
 
+
+
   // Alert generation state tracker for transition-based logging
   const previousFaultsRef = useRef<Map<string, DetectedFault>>(new Map());
+
+
 
   // Auto-generate alerts on fault occurrence or recovery
   useEffect(() => {
     const now = Date.now();
     const newAlerts: AlertHistoryItem[] = [];
     const currentFaultMap = new Map<string, DetectedFault>();
+
+
 
     activeFaults.forEach(fault => {
       currentFaultMap.set(fault.code, fault);
@@ -358,6 +515,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     });
 
+
+
     previousFaultsRef.current.forEach((prevFault, code) => {
       if (!currentFaultMap.has(code)) {
         newAlerts.push({
@@ -374,7 +533,11 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     });
 
+
+
     previousFaultsRef.current = currentFaultMap;
+
+
 
     if (newAlerts.length > 0) {
       setAlertHistory(prev => {
@@ -389,6 +552,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [activeFaults]);
 
+
+
   // Persist thresholds whenever they change
   useEffect(() => {
     try {
@@ -398,6 +563,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [thresholds]);
 
+
+
   // Sync initial thresholds and alerts from backend on initial mount
   useEffect(() => {
     API_SERVICE.getThresholds().then(remoteThresholds => {
@@ -405,6 +572,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
         setThresholds(prev => ({ ...prev, ...remoteThresholds }));
       }
     }).catch(() => {});
+
+
 
     API_SERVICE.getAlerts(30).then(remoteAlerts => {
       if (remoteAlerts && remoteAlerts.length > 0) {
@@ -417,13 +586,24 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     }).catch(() => {});
   }, []);
 
+
+
+  const systemStatusRef = useRef(systemStatus);
+  useEffect(() => {
+    systemStatusRef.current = systemStatus;
+  }, [systemStatus]);
+
   // 1-Second Telemetry Tick for Independent Simulation Mode
   useEffect(() => {
     if (isStreamingPaused || operatingMode !== 'simulation') return;
 
+
+
     const interval = setInterval(() => {
       setSensors(prev => {
         let { temperature, current, vibration, speed, doorClosed, floor, direction } = prev;
+
+
 
         if (isSimulatingNoise) {
           const tempJitter = (Math.random() - 0.5) * 0.15;
@@ -431,11 +611,15 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
           const vibJitter = (Math.random() - 0.5) * 0.12;
           const speedJitter = speed > 0 ? (Math.random() - 0.5) * 0.02 : 0;
 
+
+
           temperature = +(temperature + tempJitter).toFixed(1);
           current = +(Math.max(0, current + currentJitter)).toFixed(2);
           vibration = +(Math.max(0, vibration + vibJitter)).toFixed(2);
           speed = +(Math.max(0, speed + speedJitter)).toFixed(2);
         }
+
+
 
         let nextFloor = floor;
         let nextDir = direction;
@@ -454,9 +638,13 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
           });
         }
 
+
+
         const now = Date.now();
         const d = new Date(now);
         const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+
+
 
         setTelemetryHistory(history => [
           ...history.slice(-29),
@@ -467,9 +655,11 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
             current,
             vibration,
             speed,
-            status: systemStatus
+            status: systemStatusRef.current
           }
         ]);
+
+
 
         return {
           ...prev,
@@ -485,81 +675,159 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       });
     }, 1500);
 
+
+
     return () => clearInterval(interval);
-  }, [operatingMode, isStreamingPaused, isSimulatingNoise, systemStatus]);
+  }, [operatingMode, isStreamingPaused, isSimulatingNoise]);
+
+
 
   // Telemetry Ingestion via WebSocket (/ws/telemetry) with REST Fallback
   useEffect(() => {
     let isMounted = true;
 
+
+
     // Helper to process telemetry updates from either WebSocket or REST
-    const handleBackendPayload = (payload: any) => {
+    const handleBackendPayload = (message: any) => {
       if (!isMounted) return;
       setIsBackendConnected(true);
 
-      const tele = payload.telemetry || payload;
-      const isHardwareSource = (payload.source === 'esp32_hardware' || mockHardwareStatus === 'connected');
-      setHardwareConnected(isHardwareSource);
 
-      const now = tele.timestamp ? Math.floor(tele.timestamp > 10000000000 ? tele.timestamp : tele.timestamp * 1000) : Date.now();
-      const d = new Date(now);
-      const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 
-      // In Real Sensor Mode, incoming live telemetry drives the physical state and waveform buffer
-      if (operatingMode === 'real_hardware' && !isStreamingPaused) {
-        setSensors(prev => ({
-          ...prev,
-          timestamp: now,
-          temperature: tele.temperature ?? prev.temperature,
-          current: tele.current ?? prev.current,
-          vibration: tele.vibration ?? prev.vibration,
-          speed: tele.speed ?? prev.speed,
-          doorClosed: tele.doorClosed ?? prev.doorClosed,
-          floor: tele.floor ?? prev.floor,
-          direction: tele.direction ?? prev.direction
-        }));
+      const msgType = message.type;
+      const msgSource = message.source || message.data?.source;
+      const payload = message.data || message;
 
-        setTelemetryHistory(history => [
-          ...history.slice(-29),
-          {
-            timeStr,
-            timestamp: now,
-            temperature: tele.temperature,
-            current: tele.current,
-            vibration: tele.vibration,
-            speed: tele.speed,
-            status: payload.status || 'normal'
+
+
+      // 1. PHYSICAL HARDWARE MESSAGE
+      if (msgType === 'hardware_telemetry_update' || msgSource === 'esp32_hardware') {
+        const isHw = (msgSource === 'esp32_hardware' || mockHardwareStatus === 'connected');
+        setHardwareConnected(isHw);
+
+
+
+        if (operatingMode === 'real_hardware' && !isStreamingPaused) {
+          if (!isHw) {
+            setSensors({
+              timestamp: Date.now(),
+              temperature: 0,
+              current: 0,
+              vibration: 0,
+              speed: 0,
+              doorClosed: false,
+              floor: 1,
+              direction: 'idle'
+            });
+            return;
           }
-        ]);
+          const hwData = payload;
+          if (hwData.operating_state) {
+            setHardwareOperatingState(hwData.operating_state);
+          }
+
+          const rawTs = hwData.timestamp || hwData.server_receipt_timestamp || Date.now() / 1000;
+          const packetId = hwData.packet_id;
+
+          const isDuplicate = (packetId != null && packetId === lastHwPacketIdRef.current) ||
+                              (packetId == null && rawTs === lastHwTimestampRef.current);
+
+          if (packetId != null) lastHwPacketIdRef.current = packetId;
+          lastHwTimestampRef.current = rawTs;
+
+          const now = rawTs > 10000000000 ? Math.floor(rawTs) : Math.floor(rawTs * 1000);
+          const d = new Date(now);
+          const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+
+          let temp = typeof hwData.water_temp_c === 'number' ? hwData.water_temp_c : 0;
+          let curr = typeof hwData.led_current_ma === 'number' ? hwData.led_current_ma : 0;
+          let vib = typeof hwData.vibration_events_per_sec === 'number' ? hwData.vibration_events_per_sec : 0;
+          let spd = typeof hwData.disc_rpm === 'number' ? hwData.disc_rpm : 0;
+
+          if (isSimulatingNoise) {
+            temp = +(temp + (Math.random() - 0.5) * 0.1).toFixed(2);
+            curr = +(Math.max(0, curr + (Math.random() - 0.5) * 0.08)).toFixed(2);
+            vib = +(Math.max(0, vib + (Math.random() - 0.5) * 0.1)).toFixed(2);
+            spd = +(Math.max(0, spd + (Math.random() - 0.5) * 0.1)).toFixed(2);
+          }
+
+          setSensors(prev => ({
+            ...prev,
+            timestamp: now,
+            temperature: temp,
+            current: curr,
+            vibration: vib,
+            speed: spd,
+            doorClosed: null as any,
+            floor: null as any,
+            direction: null as any
+          }));
+
+          if (!isDuplicate || isSimulatingNoise) {
+            setTelemetryHistory(history => [
+              ...history.slice(-29),
+              {
+                timeStr,
+                timestamp: now,
+                temperature: temp,
+                current: curr,
+                vibration: vib,
+                speed: spd,
+                status: hwData.diagnostic_status || 'normal'
+              }
+            ]);
+          }
+        }
+        return; // Stop here: hardware data NEVER triggers legacy elevator ML/RCA
       }
 
-      // Live Backend ML & RCA diagnosis updates
-      if (payload.anomaly && payload.fault_prediction) {
-        setBackendDiagnosis({
-          timestamp: now,
-          systemStatus: payload.status || 'normal',
-          anomaly: {
-            isAnomaly: payload.anomaly.is_anomaly,
-            anomalyScore: payload.anomaly.anomaly_score,
-            modelVersion: payload.anomaly.model_version
-          },
-          faultClassification: {
-            predictedFault: payload.fault_prediction.predicted_fault,
-            confidence: payload.fault_prediction.confidence,
-            probabilities: payload.fault_prediction.probabilities || {},
-            modelVersion: payload.fault_prediction.model_version
-          },
-          rca: payload.rca || [],
-          motorHealth: payload.motor_health || {
-            overallHealthScore: 85,
-            thermalStressScore: 85,
-            electricalStressScore: 85,
-            mechanicalVibrationScore: 85,
-            status: 'normal'
-          }
-        });
+
+
+      // 2. SIMULATION MESSAGE (telemetry_update)
+      if (msgType === 'telemetry_update' || msgSource === 'simulated') {
+        // If the user selected real_hardware mode, NEVER allow simulated messages to overwrite hardware telemetry
+        if (operatingMode === 'real_hardware') {
+          return;
+        }
+
+
+
+        const tele = payload.telemetry || payload;
+        const now = tele.timestamp ? Math.floor(tele.timestamp > 10000000000 ? tele.timestamp : tele.timestamp * 1000) : Date.now();
+
+
+
+        // Live Backend ML & RCA diagnosis updates exclusively for simulated elevator
+        if (payload.anomaly && payload.fault_prediction) {
+          setBackendDiagnosis({
+            timestamp: now,
+            systemStatus: payload.status || 'normal',
+            anomaly: {
+              isAnomaly: payload.anomaly.is_anomaly,
+              anomalyScore: payload.anomaly.anomaly_score,
+              modelVersion: payload.anomaly.model_version
+            },
+            faultClassification: {
+              predictedFault: payload.fault_prediction.predicted_fault,
+              confidence: payload.fault_prediction.confidence,
+              probabilities: payload.fault_prediction.probabilities || {},
+              modelVersion: payload.fault_prediction.model_version
+            },
+            rca: payload.rca || [],
+            motorHealth: payload.motor_health || {
+              overallHealthScore: 85,
+              thermalStressScore: 85,
+              electricalStressScore: 85,
+              mechanicalVibrationScore: 85,
+              status: 'normal'
+            }
+          });
+        }
       }
     };
+
+
 
     // 1. Establish persistent WebSocket connection to ws://localhost:8000/ws/telemetry
     const wsController = API_SERVICE.createTelemetryWebSocket(
@@ -575,6 +843,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     );
 
+
+
     // 2. Periodic REST poll fallback (ensures sync even if WebSocket is disconnected or in mock mode)
     const pollRest = async () => {
       if (isStreamingPaused) {
@@ -582,18 +852,36 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
         return;
       }
       try {
-        const result = await API_SERVICE.fetchHardwareTelemetry();
-        if (!isMounted) return;
-        if (result.connected && result.data) {
-          setIsBackendConnected(true);
-          const isHw = (result.source === 'esp32_hardware' || mockHardwareStatus === 'connected');
-          setHardwareConnected(isHw);
+        if (operatingMode === 'real_hardware') {
+          const result = await API_SERVICE.fetchHardwareTelemetry();
+          if (!isMounted) return;
+          if (result.connected && result.data) {
+            setIsBackendConnected(true);
+            setHardwareConnected(true);
+            if (result.packet?.operating_state) {
+              setHardwareOperatingState(result.packet.operating_state);
+            }
+            const packetId = result.packet?.packet_id;
+            const rawTs = result.packet?.timestamp || result.data.timestamp || Date.now() / 1000;
 
-          if (operatingMode === 'real_hardware') {
-            const { temperature, current, vibration, speed, doorClosed, floor, direction } = result.data;
-            const now = Date.now();
+            const isDuplicate = (packetId != null && packetId === lastHwPacketIdRef.current) ||
+                                (packetId == null && rawTs === lastHwTimestampRef.current);
+
+            let { temperature, current, vibration, speed } = result.data;
+
+            if (packetId != null) lastHwPacketIdRef.current = packetId;
+            lastHwTimestampRef.current = rawTs;
+
+            const now = rawTs > 10000000000 ? Math.floor(rawTs) : Math.floor(rawTs * 1000);
             const d = new Date(now);
             const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+
+            if (isSimulatingNoise) {
+              temperature = +(temperature + (Math.random() - 0.5) * 0.1).toFixed(2);
+              current = +(Math.max(0, current + (Math.random() - 0.5) * 0.08)).toFixed(2);
+              vibration = +(Math.max(0, vibration + (Math.random() - 0.5) * 0.1)).toFixed(2);
+              speed = +(Math.max(0, speed + (Math.random() - 0.5) * 0.1)).toFixed(2);
+            }
 
             setSensors(prev => ({
               ...prev,
@@ -602,41 +890,71 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
               current,
               vibration,
               speed,
-              doorClosed,
-              floor: floor ?? prev.floor,
-              direction: direction ?? prev.direction
+              doorClosed: null as any,
+              floor: null as any,
+              direction: null as any
             }));
 
-            setTelemetryHistory(history => [
-              ...history.slice(-29),
-              {
-                timeStr,
-                timestamp: now,
-                temperature,
-                current,
-                vibration,
-                speed,
-                status: result.diagnosis?.systemStatus || 'normal'
-              }
-            ]);
-          }
-
-          if (result.diagnosis) {
-            setBackendDiagnosis(result.diagnosis);
-          }
-        } else {
-          if (operatingMode === 'real_hardware') {
+            if (!isDuplicate || isSimulatingNoise) {
+              setTelemetryHistory(history => [
+                ...history.slice(-29),
+                {
+                  timeStr,
+                  timestamp: now,
+                  temperature,
+                  current,
+                  vibration,
+                  speed,
+                  status: (result.packet?.diagnostic_status?.toLowerCase() === 'normal' || !result.packet?.diagnostic_status) ? 'normal' : 'warning'
+                }
+              ]);
+            }
+          } else {
             setHardwareConnected(false);
+            setSensors(prev => {
+              if (prev.temperature === 0 && prev.current === 0 && prev.vibration === 0 && prev.speed === 0) {
+                return prev;
+              }
+              return {
+                timestamp: Date.now(),
+                temperature: 0,
+                current: 0,
+                vibration: 0,
+                speed: 0,
+                doorClosed: false,
+                floor: 1,
+                direction: 'idle'
+              };
+            });
           }
         }
       } catch {
         if (isMounted && operatingMode === 'real_hardware') {
           setHardwareConnected(false);
+          setSensors(prev => {
+            if (prev.temperature === 0 && prev.current === 0 && prev.vibration === 0 && prev.speed === 0) {
+              return prev;
+            }
+            return {
+              timestamp: Date.now(),
+              temperature: 0,
+              current: 0,
+              vibration: 0,
+              speed: 0,
+              doorClosed: false,
+              floor: 1,
+              direction: 'idle'
+            };
+          });
         }
       }
     };
 
+
+
     const pollInterval = setInterval(pollRest, 3000);
+
+
 
     return () => {
       isMounted = false;
@@ -644,6 +962,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       clearInterval(pollInterval);
     };
   }, [operatingMode, isStreamingPaused, mockHardwareStatus]);
+
+
 
   // Actions
   const appendTelemetryHistory = (nextSensors: SensorData) => {
@@ -663,6 +983,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     ]);
   };
 
+
+
   const updateSensors = (partial: Partial<SensorData>) => {
     setActivePresetId(null);
     setSensors(prev => {
@@ -676,10 +998,14 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   };
 
+
+
   const applyPreset = (presetId: string) => {
     const preset = SIMULATION_PRESETS.find(p => p.id === presetId);
     if (!preset) return;
     setActivePresetId(preset.id);
+
+
 
     // Apply to local sensors
     setSensors(prev => {
@@ -692,15 +1018,21 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
       return next;
     });
 
+
+
     // In real_hardware / backend mode, notify backend to synchronize scenario
     if (operatingMode === 'real_hardware') {
       API_SERVICE.setSimulationScenario(presetId).catch(() => {});
     }
   };
 
+
+
   const resetToNominal = () => {
     applyPreset('nominal');
   };
+
+
 
   const updateThresholds = (partial: Partial<SensorThresholds>) => {
     const updated = { ...thresholds, ...partial };
@@ -709,18 +1041,26 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     API_SERVICE.updateThresholds(updated).catch(() => {});
   };
 
+
+
   const resetThresholdsToDefaults = () => {
     setThresholds(DEFAULT_THRESHOLDS);
     API_SERVICE.updateThresholds(DEFAULT_THRESHOLDS).catch(() => {});
   };
 
+
+
   const toggleSimulatingNoise = () => {
     setIsSimulatingNoise(prev => !prev);
   };
 
+
+
   const toggleStreamingPause = () => {
     setIsStreamingPaused(prev => !prev);
   };
+
+
 
   const acknowledgeAlert = (alertId: string) => {
     setAlertHistory(prev => {
@@ -736,6 +1076,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     API_SERVICE.acknowledgeAlert(alertId).catch(() => {});
   };
 
+
+
   const clearAlert = (alertId: string) => {
     setAlertHistory(prev => {
       const updated = prev.filter(item => item.id !== alertId);
@@ -748,6 +1090,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   };
 
+
+
   const clearAllAlerts = () => {
     setAlertHistory([]);
     try {
@@ -757,12 +1101,15 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
+
+
   return (
     <ElevatorContext.Provider
       value={{
         sensors,
         thresholds,
         systemStatus,
+        operatingState,
         activeFaults,
         motorHealth,
         telemetryHistory,
@@ -799,6 +1146,8 @@ export const ElevatorProvider: React.FC<{ children: ReactNode }> = ({ children }
   );
 };
 
+
+
 export function useElevator() {
   const context = useContext(ElevatorContext);
   if (!context) {
@@ -806,3 +1155,4 @@ export function useElevator() {
   }
   return context;
 }
+

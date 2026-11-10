@@ -17,7 +17,8 @@ export function evaluateSensors(
 
   // 1. Door Interlock Hazard Check (Safety Critical)
   // If doors are open while elevator is in motion (speed > threshold)
-  if (!sensors.doorClosed && sensors.speed > thresholds.doorHazardSpeedLimit) {
+  // Only evaluate when explicitly false (prototype hardware has no door sensor, doorClosed is null)
+  if (sensors.doorClosed === false && sensors.speed > thresholds.doorHazardSpeedLimit) {
     faults.push({
       id: 'FLT-DOOR-01',
       code: 'E-SEC-01',
@@ -180,7 +181,8 @@ export function evaluateSensors(
   }
 
   // 4. Motor Current Evaluation
-  if (sensors.current >= thresholds.currentCritical) {
+  const currUnit = thresholds.currentCritical <= 50 ? 'mA' : 'A';
+  if (sensors.current > thresholds.currentCritical) {
     faults.push({
       id: 'FLT-CUR-02',
       code: 'E-ELE-02',
@@ -188,9 +190,9 @@ export function evaluateSensors(
       severity: 'critical',
       affectedComponent: 'Motor Armature Windings & Drive Power Stage',
       componentCategory: 'drive_inverter',
-      sensorResponsible: 'Hall Effect AC Current Transducer (LEM)',
-      triggerValue: `${sensors.current.toFixed(2)} A`,
-      thresholdBreached: `Exceeded critical current limit (> ${thresholds.currentCritical.toFixed(2)} A)`,
+      sensorResponsible: currUnit === 'mA' ? 'INA219 Current Sensor' : 'Hall Effect AC Current Transducer (LEM)',
+      triggerValue: `${sensors.current.toFixed(2)} ${currUnit}`,
+      thresholdBreached: `Exceeded critical current limit (> ${thresholds.currentCritical.toFixed(2)} ${currUnit})`,
       detectedAt: now,
       isolationConfidence: 95,
       maintenanceUrgency: 'Immediate Shutdown Required',
@@ -198,7 +200,7 @@ export function evaluateSensors(
         'Severe mechanical binding or obstruction in car safety gear or counterweight shoes.',
         'Traction motor brake failing to lift fully (brake shoe dragging on drum/disc).',
         'Short-circuit or ground fault in motor supply feeder cables.',
-        'VFD current sensor calibration drift or damaged inverter transistor module.'
+        'Current sensor calibration drift or damaged inverter transistor module.'
       ],
       recommendedActions: [
         'Cut motor drive torque immediately and set mechanical holding brake.',
@@ -219,9 +221,9 @@ export function evaluateSensors(
       severity: 'warning',
       affectedComponent: 'Traction Drive Line / Counterweight Balance',
       componentCategory: 'traction_motor',
-      sensorResponsible: 'Hall Effect AC Current Transducer',
-      triggerValue: `${sensors.current.toFixed(2)} A`,
-      thresholdBreached: `Exceeded warning current limit (> ${thresholds.currentWarning.toFixed(2)} A)`,
+      sensorResponsible: currUnit === 'mA' ? 'INA219 Current Sensor' : 'Hall Effect AC Current Transducer',
+      triggerValue: `${sensors.current.toFixed(2)} ${currUnit}`,
+      thresholdBreached: `Exceeded warning current limit (> ${thresholds.currentWarning.toFixed(2)} ${currUnit})`,
       detectedAt: now,
       isolationConfidence: 86,
       maintenanceUrgency: 'Schedule Inspection within 24 Hours',
@@ -242,7 +244,9 @@ export function evaluateSensors(
   }
 
   // 5. Vibration Evaluation
-  if (sensors.vibration >= thresholds.vibrationCritical) {
+  const vibUnit = thresholds.vibrationCritical > 25 ? 'events/sec' : 'mm/s';
+  const vibLow = thresholds.vibrationLow ?? 45.0;
+  if (sensors.vibration > thresholds.vibrationCritical) {
     faults.push({
       id: 'FLT-VIB-02',
       code: 'E-MEC-02',
@@ -250,9 +254,9 @@ export function evaluateSensors(
       severity: 'critical',
       affectedComponent: 'Drive Machine Bearings & Deflector Sheave',
       componentCategory: 'bearing_gearbox',
-      sensorResponsible: 'Triaxial Industrial Piezoelectric Accelerometer',
-      triggerValue: `${sensors.vibration.toFixed(2)} mm/s`,
-      thresholdBreached: `Exceeded critical vibration limit (> ${thresholds.vibrationCritical.toFixed(2)} mm/s)`,
+      sensorResponsible: vibUnit === 'events/sec' ? 'SW-420 Vibration Sensor' : 'Triaxial Industrial Piezoelectric Accelerometer',
+      triggerValue: `${sensors.vibration.toFixed(1)} ${vibUnit}`,
+      thresholdBreached: `Exceeded critical vibration limit (> ${thresholds.vibrationCritical.toFixed(1)} ${vibUnit})`,
       detectedAt: now,
       isolationConfidence: 93,
       maintenanceUrgency: 'Immediate Shutdown Required',
@@ -281,9 +285,9 @@ export function evaluateSensors(
       severity: 'warning',
       affectedComponent: 'Traction Sheave Bearings & Guide Rail Joints',
       componentCategory: 'bearing_gearbox',
-      sensorResponsible: 'Triaxial Accelerometer (Machine Bedplate)',
-      triggerValue: `${sensors.vibration.toFixed(2)} mm/s`,
-      thresholdBreached: `Exceeded warning vibration limit (> ${thresholds.vibrationWarning.toFixed(2)} mm/s)`,
+      sensorResponsible: vibUnit === 'events/sec' ? 'SW-420 Vibration Sensor' : 'Triaxial Accelerometer (Machine Bedplate)',
+      triggerValue: `${sensors.vibration.toFixed(1)} ${vibUnit}`,
+      thresholdBreached: `Exceeded warning vibration limit (> ${thresholds.vibrationWarning.toFixed(1)} ${vibUnit})`,
       detectedAt: now,
       isolationConfidence: 84,
       maintenanceUrgency: 'Schedule Inspection within 24 Hours',
@@ -301,6 +305,33 @@ export function evaluateSensors(
         'Tag car for automated vibration trend monitoring on subsequent travel cycles.'
       ]
     });
+  } else if (sensors.vibration < vibLow && (sensors.speed > 0.1 || sensors.vibration > 0)) {
+    faults.push({
+      id: 'FLT-VIB-00',
+      code: 'E-MEC-00',
+      name: 'Insufficient Vibration Telemetry / Below Operating Range',
+      severity: 'warning',
+      affectedComponent: 'Vibration Transducer Mounting & SW-420 Sensor',
+      componentCategory: 'bearing_gearbox',
+      sensorResponsible: 'SW-420 Digital Vibration Sensor',
+      triggerValue: `${sensors.vibration.toFixed(1)} ${vibUnit}`,
+      thresholdBreached: `Below minimum normal operating range (< ${vibLow.toFixed(1)} ${vibUnit})`,
+      detectedAt: now,
+      isolationConfidence: 80,
+      maintenanceUrgency: 'Inspect sensor mounting and wiring',
+      possibleRootCauses: [
+        'Vibration sensor detached or loose mounting on test frame.',
+        'Sensitivity potentiometer on SW-420 misadjusted.',
+        'Signal wire loose or discontinuous digital pulse train.'
+      ],
+      recommendedActions: [
+        'Check sensor bracket mechanical fastening to elevator rig.',
+        'Calibrate SW-420 digital comparator sensitivity threshold.'
+      ],
+      isolationProtocol: [
+        'Tag vibration telemetry channel for inspection.'
+      ]
+    });
   }
 
   // 6. Compound Multi-Sensor Fault Isolation
@@ -314,7 +345,7 @@ export function evaluateSensors(
       id: 'FLT-CMP-01',
       code: 'E-SYS-01',
       name: 'Compound Electro-Thermal Stator Stress',
-      severity: sensors.temperature >= thresholds.temperatureCritical || sensors.current >= thresholds.currentCritical ? 'critical' : 'warning',
+      severity: sensors.temperature >= thresholds.temperatureCritical || sensors.current > thresholds.currentCritical ? 'critical' : 'warning',
       affectedComponent: 'Motor Armature & Power Inverter Stage',
       componentCategory: 'traction_motor',
       sensorResponsible: 'Correlated: PT100 RTD + LEM Current Sensor',
@@ -378,7 +409,7 @@ export function evaluateSensors(
       id: 'FLT-CMP-03',
       code: 'E-SYS-03',
       name: 'High Friction Electro-Mechanical Drag',
-      severity: sensors.current >= thresholds.currentCritical || sensors.vibration >= thresholds.vibrationCritical ? 'critical' : 'warning',
+      severity: sensors.current > thresholds.currentCritical || sensors.vibration > thresholds.vibrationCritical ? 'critical' : 'warning',
       affectedComponent: 'Guide Shoes, Safety Gear & Traction Sheave',
       componentCategory: 'guide_rail_counterweight',
       sensorResponsible: 'Correlated: LEM Current Sensor + Accelerometer',

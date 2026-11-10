@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   const pageTitles: Record<NavPage, { title: string; subtitle: string }> = {
     dashboard: {
       title: 'Elevator Monitoring Dashboard',
-      subtitle: 'Real-time telemetry, motor health indexing & active fault monitoring'
+      subtitle: 'Real-time telemetry, system health indexing & active fault monitoring'
     },
     monitoring: {
       title: 'Live Sensor Monitoring',
@@ -66,15 +66,15 @@ export const Header: React.FC<HeaderProps> = ({
   const currentInfo = pageTitles[currentPage];
 
   return (
-    <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-xs">
+    <header className="bg-[#F8F3F0] border-b border-[#E2D9D2] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-xs">
       {/* Title & Breadcrumb */}
       <div>
         <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
           <span>Traction Elevator #01</span>
           <span>/</span>
-          <span className="text-slate-800 font-semibold">{currentInfo.title}</span>
+          <span className="text-[#014BAA] font-bold">{currentInfo.title}</span>
         </div>
-        <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">
+        <h1 className="text-lg font-bold text-[#014BAA] tracking-tight leading-tight">
           {currentInfo.title}
         </h1>
       </div>
@@ -82,16 +82,16 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Action Controls */}
       <div className="flex items-center flex-wrap gap-2.5">
         {/* Operating Mode Selector */}
-        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
+        <div className="flex items-center bg-[#EFE8E2] p-0.5 rounded-xl border border-[#E2D9D2] text-xs">
           <button
             onClick={() => setOperatingMode('simulation')}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
               operatingMode === 'simulation'
-                ? 'bg-white text-blue-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-[#014BAA] text-[#F8F3F0] shadow-xs'
+                : 'text-slate-600 hover:text-[#014BAA]'
             }`}
           >
-            <Sliders className="w-3.5 h-3.5 text-blue-600" />
+            <Sliders className="w-3.5 h-3.5" />
             <span>Simulation Mode</span>
           </button>
           <button
@@ -99,13 +99,13 @@ export const Header: React.FC<HeaderProps> = ({
               setOperatingMode('real_hardware');
               onOpenHardwareModal();
             }}
-            className={`px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
               operatingMode === 'real_hardware'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-[#014BAA] text-[#F8F3F0] shadow-xs'
+                : 'text-slate-600 hover:text-[#014BAA]'
             }`}
           >
-            <HardDrive className="w-3.5 h-3.5 text-indigo-500" />
+            <HardDrive className="w-3.5 h-3.5" />
             <span>Real Sensor Mode</span>
           </button>
         </div>
@@ -114,15 +114,15 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={toggleStreamingPause}
           title={isStreamingPaused ? 'Resume live telemetry stream' : 'Pause live telemetry stream'}
-          className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors ${
             isStreamingPaused
-              ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              ? 'bg-amber-500 text-white border-amber-600 hover:bg-amber-600'
+              : 'bg-white text-slate-700 border-[#E2D9D2] hover:bg-[#EFE8E2]'
           }`}
         >
           {isStreamingPaused ? (
             <>
-              <Play className="w-3.5 h-3.5 text-amber-600" />
+              <Play className="w-3.5 h-3.5 text-white" />
               <span>Resume Stream</span>
             </>
           ) : (
@@ -137,13 +137,13 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={toggleSimulatingNoise}
           title="Toggle realistic sensor noise micro-fluctuations"
-          className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors ${
             isSimulatingNoise
-              ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
-              : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+              ? 'bg-[#014BAA] text-[#F8F3F0] border-[#014BAA]'
+              : 'bg-white text-slate-700 border-[#E2D9D2] hover:bg-[#EFE8E2]'
           }`}
         >
-          <Radio className={`w-3.5 h-3.5 ${isSimulatingNoise ? 'text-blue-600' : 'text-slate-400'}`} />
+          <Radio className="w-3.5 h-3.5" />
           <span>Noise: {isSimulatingNoise ? 'ON' : 'OFF'}</span>
         </button>
 
@@ -151,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={resetToNominal}
           title="Reset all sensor parameters to nominal baseline"
-          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-medium flex items-center gap-1.5 transition-colors"
+          className="px-3 py-1.5 rounded-xl border border-[#E2D9D2] bg-white text-slate-700 hover:bg-[#EFE8E2] text-xs font-semibold flex items-center gap-1.5 transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
           <span>Reset Nominal</span>
@@ -164,20 +164,20 @@ export const Header: React.FC<HeaderProps> = ({
               onSelectPage('faults');
             }
           }}
-          className={`px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-2 cursor-pointer transition-colors ${
+          className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 cursor-pointer transition-colors shadow-xs ${
             systemStatus === 'critical'
               ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
               : systemStatus === 'warning'
               ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-              : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+              : 'bg-white border-[#E2D9D2] text-[#014BAA] hover:bg-[#EFE8E2]'
           }`}
         >
           {systemStatus === 'critical' && <Flame className="w-4 h-4 text-rose-600 animate-pulse" />}
           {systemStatus === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-600" />}
-          {systemStatus === 'normal' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-          <span className="capitalize font-semibold">{systemStatus}</span>
+          {systemStatus === 'normal' && <CheckCircle2 className="w-4 h-4 text-[#014BAA]" />}
+          <span className="capitalize font-bold">{systemStatus}</span>
           {activeFaults.length > 0 && (
-            <span className="font-mono text-[10px] px-1.5 py-0.2 bg-white/80 rounded border border-current font-bold">
+            <span className="font-mono text-[10px] px-1.5 py-0.2 bg-white rounded border border-current font-bold">
               {activeFaults.length} Fault{activeFaults.length > 1 ? 's' : ''}
             </span>
           )}

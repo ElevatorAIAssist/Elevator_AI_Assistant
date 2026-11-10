@@ -38,10 +38,10 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
   return (
     <div className="space-y-6">
       {/* Simulation Header */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-xl p-5 border border-[#E2D9D2] shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-blue-600" />
+          <h2 className="text-sm font-bold text-[#014BAA] uppercase tracking-wider flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-[#014BAA]" />
             <span>Interactive Sensor Telemetry Simulation Bench</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -51,7 +51,7 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
 
         <button
           onClick={resetToNominal}
-          className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition-colors border border-slate-200"
+          className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-[#EFE8E2] hover:bg-[#E2D9D2] text-slate-700 flex items-center gap-1.5 transition-colors border border-[#E2D9D2]"
         >
           <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
           <span>Reset All to Nominal Baseline</span>
@@ -59,7 +59,7 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
       </div>
 
       {/* Preset Scenarios Strip */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs">
+      <div className="bg-white rounded-xl p-5 border border-[#E2D9D2] shadow-xs">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
@@ -82,19 +82,19 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
                       ? 'border-rose-400 bg-rose-50/70 ring-1 ring-rose-300'
                       : preset.targetSeverity === 'warning'
                       ? 'border-amber-400 bg-amber-50/70 ring-1 ring-amber-300'
-                      : 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-300'
-                    : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                      : 'border-[#014BAA] bg-[#EFE8E2] ring-1 ring-[#014BAA]'
+                    : 'border-[#E2D9D2] hover:border-slate-300 bg-white hover:bg-[#EFE8E2]/40'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-900">{preset.name}</span>
+                  <span className="font-bold text-xs text-slate-900">{preset.name}</span>
                   <span
-                    className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                    className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
                       preset.targetSeverity === 'critical'
                         ? 'bg-rose-100 text-rose-700 border border-rose-200'
                         : preset.targetSeverity === 'warning'
                         ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                        : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                        : 'bg-[#EFE8E2] text-[#014BAA] border border-[#E2D9D2]'
                     }`}
                   >
                     {preset.targetSeverity}
@@ -103,11 +103,11 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
                 <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
                   {preset.description}
                 </p>
-                <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <div className="mt-2 pt-2 border-t border-[#E2D9D2]/70 flex items-center justify-between text-[10px] font-mono text-slate-500">
                   <span>{preset.values.temperature}°C</span>
-                  <span>{preset.values.current}A</span>
-                  <span>{preset.values.vibration} mm/s</span>
-                  <span>{preset.values.speed} m/s</span>
+                  <span>{preset.values.current} mA</span>
+                  <span>{preset.values.vibration} ev/s</span>
+                  <span>{preset.values.speed} RPM</span>
                 </div>
               </button>
             );
@@ -118,8 +118,8 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
       {/* Main Grid: Sliders on Left (7 cols), Live Diagnostic Preview on Right (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Sliders Container */}
-        <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-6">
-          <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+        <div className="lg:col-span-7 bg-white rounded-xl border border-[#E2D9D2] p-6 shadow-xs space-y-6">
+          <div className="border-b border-[#E2D9D2] pb-3 flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Real-Time Sensor Inputs
             </h3>
@@ -131,21 +131,24 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Thermometer className="w-4 h-4 text-rose-500" />
-                <label className="text-xs font-semibold text-slate-800">
-                  Traction Motor Temperature (°C)
-                </label>
+                <div>
+                  <label className="text-xs font-bold text-slate-800 block">
+                    Temperature
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-medium block">Water Temperature (°C) • DS18B20</span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-slate-900 tabular-nums">
                   {sensors.temperature.toFixed(1)} °C
                 </span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                     sensors.temperature >= thresholds.temperatureCritical
                       ? 'bg-rose-100 text-rose-700'
                       : sensors.temperature >= thresholds.temperatureWarning
                       ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
+                      : 'bg-[#EFE8E2] text-[#014BAA]'
                   }`}
                 >
                   {sensors.temperature >= thresholds.temperatureCritical
@@ -164,40 +167,43 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
               step="0.5"
               value={sensors.temperature}
               onChange={e => updateSensors({ temperature: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600"
+              className="w-full h-2 bg-[#EFE8E2] rounded-lg appearance-none cursor-pointer accent-rose-600"
             />
 
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
               <span>20°C (Cold)</span>
-              <span className="text-amber-600">Warn: &ge; {thresholds.temperatureWarning}°C</span>
+              <span className="text-amber-700">Warn: &ge; {thresholds.temperatureWarning}°C</span>
               <span className="text-rose-600">Crit: &ge; {thresholds.temperatureCritical}°C</span>
               <span>110°C (Max)</span>
             </div>
           </div>
 
-          {/* 2. Motor Current Slider */}
-          <div className="space-y-2 pt-4 border-t border-slate-100">
+          {/* 2. Current Slider */}
+          <div className="space-y-2 pt-4 border-t border-[#E2D9D2]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-500" />
-                <label className="text-xs font-semibold text-slate-800">
-                  Motor Armature Current (A)
-                </label>
+                <div>
+                  <label className="text-xs font-bold text-slate-800 block">
+                    Current
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-medium block">LED Circuit Current (mA) • INA219</span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-slate-900 tabular-nums">
-                  {sensors.current.toFixed(2)} A
+                  {sensors.current.toFixed(2)} mA
                 </span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
-                    sensors.current >= thresholds.currentCritical
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                    sensors.current > thresholds.currentCritical
                       ? 'bg-rose-100 text-rose-700'
                       : sensors.current >= thresholds.currentWarning
                       ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
+                      : 'bg-[#EFE8E2] text-[#014BAA]'
                   }`}
                 >
-                  {sensors.current >= thresholds.currentCritical
+                  {sensors.current > thresholds.currentCritical
                     ? 'Critical'
                     : sensors.current >= thresholds.currentWarning
                     ? 'Warning'
@@ -209,47 +215,54 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
             <input
               type="range"
               min="0.0"
-              max="12.0"
+              max="15.0"
               step="0.1"
               value={sensors.current}
               onChange={e => updateSensors({ current: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+              className="w-full h-2 bg-[#EFE8E2] rounded-lg appearance-none cursor-pointer accent-amber-600"
             />
 
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>0.0 A (Idle)</span>
-              <span className="text-amber-600">Warn: &ge; {thresholds.currentWarning.toFixed(1)} A</span>
-              <span className="text-rose-600">Crit: &ge; {thresholds.currentCritical.toFixed(1)} A</span>
-              <span>12.0 A (Max)</span>
+              <span>0.0 mA (Idle)</span>
+              <span className="text-amber-700">Warn: &ge; {thresholds.currentWarning.toFixed(1)} mA</span>
+              <span className="text-rose-600">Crit: &gt; {thresholds.currentCritical.toFixed(1)} mA</span>
+              <span>15.0 mA (Max)</span>
             </div>
           </div>
 
           {/* 3. Vibration Slider */}
-          <div className="space-y-2 pt-4 border-t border-slate-100">
+          <div className="space-y-2 pt-4 border-t border-[#E2D9D2]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-indigo-500" />
-                <label className="text-xs font-semibold text-slate-800">
-                  Mechanical Vibration Velocity (mm/s RMS)
-                </label>
+                <Activity className="w-4 h-4 text-[#014BAA]" />
+                <div>
+                  <label className="text-xs font-bold text-slate-800 block">
+                    Vibration
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-medium block">Vibration Events (events/sec) • SW-420</span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-slate-900 tabular-nums">
-                  {sensors.vibration.toFixed(2)} mm/s
+                  {sensors.vibration.toFixed(2)} events/sec
                 </span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
-                    sensors.vibration >= thresholds.vibrationCritical
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                    sensors.vibration > thresholds.vibrationCritical
                       ? 'bg-rose-100 text-rose-700'
                       : sensors.vibration >= thresholds.vibrationWarning
                       ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
+                      : (sensors.vibration < (thresholds.vibrationLow ?? 45.0) && (sensors.speed > 0.1 || sensors.vibration > 0))
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-[#EFE8E2] text-[#014BAA]'
                   }`}
                 >
-                  {sensors.vibration >= thresholds.vibrationCritical
+                  {sensors.vibration > thresholds.vibrationCritical
                     ? 'Critical'
                     : sensors.vibration >= thresholds.vibrationWarning
                     ? 'Warning'
+                    : (sensors.vibration < (thresholds.vibrationLow ?? 45.0) && (sensors.speed > 0.1 || sensors.vibration > 0))
+                    ? 'Below Normal'
                     : 'Normal'}
                 </span>
               </div>
@@ -258,41 +271,45 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
             <input
               type="range"
               min="0.0"
-              max="12.0"
-              step="0.1"
+              max="200.0"
+              step="1.0"
               value={sensors.vibration}
               onChange={e => updateSensors({ vibration: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              className="w-full h-2 bg-[#EFE8E2] rounded-lg appearance-none cursor-pointer accent-[#014BAA]"
             />
 
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>0.0 mm/s (Smooth)</span>
-              <span className="text-amber-600">Warn: &ge; {thresholds.vibrationWarning.toFixed(1)} mm/s</span>
-              <span className="text-rose-600">Crit: &ge; {thresholds.vibrationCritical.toFixed(1)} mm/s</span>
-              <span>12.0 mm/s (Severe)</span>
+              <span>0.0 ev/s (Idle)</span>
+              <span className="text-slate-500">Min: {(thresholds.vibrationLow ?? 45.0).toFixed(0)} ev/s</span>
+              <span className="text-amber-700">Warn: &ge; {thresholds.vibrationWarning.toFixed(0)} ev/s</span>
+              <span className="text-rose-600">Crit: &gt; {thresholds.vibrationCritical.toFixed(0)} ev/s</span>
+              <span>200.0 ev/s (Severe)</span>
             </div>
           </div>
 
-          {/* 4. Elevator Speed Slider */}
-          <div className="space-y-2 pt-4 border-t border-slate-100">
+          {/* 4. Speed Slider */}
+          <div className="space-y-2 pt-4 border-t border-[#E2D9D2]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-emerald-500" />
-                <label className="text-xs font-semibold text-slate-800">
-                  Elevator Car Speed (m/s)
-                </label>
+                <Gauge className="w-4 h-4 text-[#014BAA]" />
+                <div>
+                  <label className="text-xs font-bold text-slate-800 block">
+                    Speed
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-medium block">Disc Rotational Speed (RPM) • TCRT5000</span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-base font-bold text-slate-900 tabular-nums">
-                  {sensors.speed.toFixed(2)} m/s
+                  {sensors.speed.toFixed(2)} RPM
                 </span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                     sensors.speed >= thresholds.speedCritical
                       ? 'bg-rose-100 text-rose-700'
                       : sensors.speed > thresholds.speedMaxNormal
                       ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
+                      : 'bg-[#EFE8E2] text-[#014BAA]'
                   }`}
                 >
                   {sensors.speed >= thresholds.speedCritical
@@ -306,36 +323,36 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
 
             <input
               type="range"
-              min="0.0"
-              max="3.0"
-              step="0.05"
+              min="0"
+              max="200"
+              step="5"
               value={sensors.speed}
               onChange={e => updateSensors({ speed: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+              className="w-full h-2 bg-[#EFE8E2] rounded-lg appearance-none cursor-pointer accent-[#014BAA]"
             />
 
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>0.0 m/s (Stationary)</span>
-              <span className="text-blue-600">Max Normal: {thresholds.speedMaxNormal.toFixed(2)} m/s</span>
-              <span className="text-rose-600">Overspeed Trip: &ge; {thresholds.speedCritical.toFixed(2)} m/s</span>
-              <span>3.0 m/s (Max)</span>
+              <span>0 RPM (Stationary)</span>
+              <span className="text-[#014BAA] font-bold">Max Normal: {thresholds.speedMaxNormal.toFixed(0)} RPM</span>
+              <span className="text-rose-600 font-bold">Overspeed Trip: &ge; {thresholds.speedCritical.toFixed(0)} RPM</span>
+              <span>200 RPM (Max)</span>
             </div>
           </div>
 
           {/* 5. Door Open / Closed Toggle Switch */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div className="pt-4 border-t border-[#E2D9D2] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center border ${
+                className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
                   sensors.doorClosed
-                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                    ? 'bg-[#EFE8E2] text-[#014BAA] border-[#E2D9D2]'
                     : 'bg-amber-50 text-amber-600 border-amber-200'
                 }`}
               >
                 {sensors.doorClosed ? <DoorClosed className="w-5 h-5" /> : <DoorOpen className="w-5 h-5" />}
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-800">
+                <label className="text-xs font-bold text-slate-800">
                   Hoistway Door Position &amp; Interlock Gate
                 </label>
                 <p className="text-[11px] text-slate-500">
@@ -346,15 +363,15 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
 
             <button
               onClick={() => updateSensors({ doorClosed: !sensors.doorClosed })}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-2 ${
                 sensors.doorClosed
-                  ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  ? 'bg-[#014BAA] text-[#F8F3F0] hover:bg-[#003882]'
                   : 'bg-amber-500 text-white hover:bg-amber-600 ring-2 ring-amber-300'
               }`}
             >
               {sensors.doorClosed ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-[#F8F3F0]" />
                   <span>DOORS CLOSED</span>
                 </>
               ) : (
@@ -367,8 +384,8 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
           </div>
 
           {/* Hint box */}
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-2.5 text-xs text-slate-600">
-            <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          <div className="p-3 bg-[#EFE8E2] rounded-xl border border-[#E2D9D2] flex items-start gap-2.5 text-xs text-slate-700">
+            <Info className="w-4 h-4 text-[#014BAA] shrink-0 mt-0.5" />
             <div className="text-[11px] leading-relaxed">
               <strong>Rule Testing Tip:</strong> Set Speed &gt; 0.5 m/s and toggle the Door to "OPEN" to trigger the safety interlock bypass fault (E-SEC-01). Increase temperature &gt; 75°C to observe motor thermal trip (E-MOT-02).
             </div>
@@ -376,32 +393,32 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
         </div>
 
         {/* Live Diagnostic Preview Box (Right Column) */}
-        <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="lg:col-span-5 bg-white rounded-xl border border-[#E2D9D2] p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E2D9D2]">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Autonomous FDIR Engine Output
             </h3>
             <span
-              className={`text-xs font-bold px-2 py-0.5 rounded capitalize ${
+              className={`text-xs font-bold px-2.5 py-0.5 rounded-full capitalize ${
                 systemStatus === 'critical'
                   ? 'bg-rose-100 text-rose-800'
                   : systemStatus === 'warning'
                   ? 'bg-amber-100 text-amber-800'
-                  : 'bg-emerald-100 text-emerald-800'
+                  : 'bg-[#EFE8E2] text-[#014BAA]'
               }`}
             >
               {systemStatus}
             </span>
           </div>
 
-          {/* Motor Health Score Gauge */}
-          <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+          {/* System Health Score Gauge */}
+          <div className="p-3.5 rounded-xl bg-[#EFE8E2] border border-[#E2D9D2] flex items-center justify-between">
             <div>
-              <div className="text-xs font-semibold text-slate-700">Calculated Motor Health Index</div>
+              <div className="text-xs font-bold text-slate-800">Calculated System Health Score</div>
               <div className="text-[11px] text-slate-500">Based on Thermal + Electrical + Vib stress</div>
             </div>
             <div className="text-right">
-              <span className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
+              <span className="text-2xl font-bold font-mono text-[#014BAA] tabular-nums">
                 {motorHealth.overallHealthScore}%
               </span>
             </div>
@@ -411,15 +428,15 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
           <div className="space-y-2">
             <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
               <span>Active Fault Tripped:</span>
-              <span className="font-mono text-xs">{activeFaults.length} Fault(s)</span>
+              <span className="font-mono text-xs font-bold text-slate-900">{activeFaults.length} Fault(s)</span>
             </div>
 
             {activeFaults.length === 0 ? (
-              <div className="p-4 rounded-lg bg-emerald-50/70 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div className="p-4 rounded-xl bg-[#EFE8E2] border border-[#E2D9D2] text-slate-700 text-xs flex items-center gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-[#014BAA] shrink-0" />
                 <div>
-                  <span className="font-semibold">Normal Baseline Condition:</span>
-                  <p className="text-[11px] text-emerald-700 mt-0.5">
+                  <span className="font-bold text-slate-900">Normal Baseline Condition:</span>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
                     No active threshold breaches. All simulated sensor signals conform to safety baseline.
                   </p>
                 </div>
@@ -429,7 +446,7 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
                 {activeFaults.map(fault => (
                   <div
                     key={fault.id}
-                    className={`p-3.5 rounded-lg border text-xs space-y-1.5 ${
+                    className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
                       fault.severity === 'critical'
                         ? 'bg-rose-50/80 border-rose-200 text-rose-900'
                         : 'bg-amber-50/80 border-amber-200 text-amber-900'
@@ -469,16 +486,16 @@ export const SensorSimulation: React.FC<SensorSimulationProps> = ({ onNavigate }
           </div>
 
           {/* Action button to RCA page */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <div className="pt-3 border-t border-[#E2D9D2] flex items-center justify-between">
             <button
               onClick={() => onNavigate('monitoring')}
-              className="text-xs font-medium text-slate-600 hover:text-slate-900"
+              className="text-xs font-bold text-[#014BAA] hover:underline"
             >
               &larr; View Live Charts
             </button>
             <button
               onClick={() => onNavigate('faults')}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 transition-colors shadow-xs"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#014BAA] hover:bg-[#003882] text-[#F8F3F0] flex items-center gap-1.5 transition-colors shadow-xs"
             >
               <span>Detailed Root Cause Analysis</span>
               <ArrowRight className="w-3.5 h-3.5" />

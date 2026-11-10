@@ -33,13 +33,27 @@ async def telemetry_broadcaster_loop():
             if not _is_broadcasting:
                 break
             if manager.active_connections:
-                payload = processor.process_telemetry()
-                msg = {
-                    "type": "telemetry_update",
-                    "timestamp": time.time(),
-                    "data": payload.model_dump()
-                }
-                await manager.broadcast_json(msg)
+                now = time.time()
+                # 1. When physical hardware telemetry is fresh and valid, broadcast ONLY hardware_telemetry_update
+                fresh_hw = serial_bridge.get_fresh_hardware_record(max_age_seconds=5.0)
+                if fresh_hw:
+                    msg_hw = {
+                        "type": "hardware_telemetry_update",
+                        "source": "esp32_hardware",
+                        "timestamp": now,
+                        "data": fresh_hw
+                    }
+                    await manager.broadcast_json(msg_hw)
+                else:
+                    # 2. When hardware is disconnected or stale, broadcast simulation telemetry with clear source
+                    payload = processor.process_telemetry(source="simulated")
+                    msg = {
+                        "type": "telemetry_update",
+                        "source": "simulated",
+                        "timestamp": now,
+                        "data": payload.model_dump()
+                    }
+                    await manager.broadcast_json(msg)
         except asyncio.CancelledError:
             break
         except Exception as e:
@@ -106,8 +120,9 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
-        "*"
+        "http://172.168.69.207:3000",
     ],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

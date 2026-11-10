@@ -61,7 +61,9 @@ let currentMockMode: MockHardwareMode = 'auto';
 
 export const DEFAULT_API_BASE =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
-  (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'http://localhost:8000');
+  (typeof window !== 'undefined' && window.location.hostname
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : 'http://localhost:8000');
 
 export const DEFAULT_WS_BASE =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_WS_BASE_URL) ||
@@ -235,9 +237,9 @@ export const API_SERVICE = {
       };
     }
 
-    // 3. Real HTTP request to FastAPI backend
+    // 3. Real HTTP request to dedicated FastAPI hardware endpoint
     try {
-      const response = await fetch(`${baseUrl}/api/v1/telemetry`, {
+      const response = await fetch(`${baseUrl}/api/v1/hardware/telemetry/latest`, {
         method: 'GET',
         headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(1800)
@@ -252,68 +254,29 @@ export const API_SERVICE = {
       }
 
       const json = await response.json();
-      const packet = json.packet;
-      const telemetry = json.telemetry;
-
-      // Extract diagnosis metadata if provided
-      let diagnosis: BackendDiagnosisData | null = null;
-      if (json.anomaly && json.fault_prediction) {
-        diagnosis = {
-          timestamp: telemetry?.timestamp || Date.now(),
-          systemStatus: json.status || 'normal',
-          anomaly: {
-            isAnomaly: json.anomaly.is_anomaly,
-            anomalyScore: json.anomaly.anomaly_score,
-            modelVersion: json.anomaly.model_version
-          },
-          faultClassification: {
-            predictedFault: json.fault_prediction.predicted_fault,
-            confidence: json.fault_prediction.confidence,
-            probabilities: json.fault_prediction.probabilities,
-            modelVersion: json.fault_prediction.model_version
-          },
-          rca: json.rca || [],
-          motorHealth: json.motor_health || {
-            overallHealthScore: 85,
-            thermalStressScore: 85,
-            electricalStressScore: 85,
-            mechanicalVibrationScore: 85,
-            status: 'normal'
-          }
-        };
-      }
-
-      if (telemetry) {
+      if (json.connected && json.telemetry) {
         return {
           connected: true,
           data: {
-            temperature: telemetry.temperature,
-            current: telemetry.current,
-            vibration: telemetry.vibration,
-            speed: telemetry.speed,
-            doorClosed: telemetry.doorClosed,
-            floor: telemetry.floor,
-            direction: telemetry.direction,
-            timestamp: telemetry.timestamp
+            temperature: json.telemetry.water_temp_c,
+            current: json.telemetry.led_current_ma,
+            vibration: json.telemetry.vibration_events_per_sec,
+            speed: json.telemetry.disc_rpm,
+            doorClosed: null as any,
+            floor: null as any,
+            direction: null as any,
+            timestamp: json.telemetry.timestamp
           },
-          packet: packet || null,
-          diagnosis,
-          source: json.source || 'backend'
-        };
-      } else if (packet && this.validateESP32Packet(packet)) {
-        return {
-          connected: true,
-          data: this.parseESP32Packet(packet),
-          packet,
-          diagnosis,
-          source: json.source || 'esp32_hardware'
+          packet: json.telemetry,
+          diagnosis: null,
+          source: 'esp32_hardware'
         };
       }
 
       return {
         connected: false,
         data: null,
-        error: 'Backend returned unrecognized data schema.'
+        error: json.diagnostic_status || 'Hardware standby / awaiting ESP32 packet'
       };
     } catch (err: any) {
       return {
@@ -331,6 +294,24 @@ export const API_SERVICE = {
     try {
       const res = await fetch(`${baseUrl}/api/v1/telemetry/history?limit=${limit}`, {
         signal: AbortSignal.timeout(2000)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.history || [];
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  },
+
+  /**
+   * Fetch historical hardware telemetry from database (GET /api/v1/hardware/telemetry/history)
+   */
+  async getHardwareTelemetryHistory(limit = 30, baseUrl = DEFAULT_API_BASE): Promise<any[]> {
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/hardware/telemetry/history?limit=${limit}`, {
+        signal: AbortSignal.timeout(2500)
       });
       if (res.ok) {
         const json = await res.json();

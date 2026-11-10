@@ -51,15 +51,15 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Educational Prototype Disclaimer Card */}
-      <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 flex items-start gap-3 shadow-xs">
-        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+      {/* System Specification Notice Card */}
+      <div className="p-4 rounded-xl bg-[#EFE8E2] border border-[#E2D9D2] text-slate-800 flex items-start gap-3 shadow-xs">
+        <Info className="w-5 h-5 text-[#014BAA] shrink-0 mt-0.5" />
         <div className="text-xs leading-relaxed">
-          <div className="font-bold text-blue-950 uppercase tracking-wide">
-            Educational Prototype Specification Notice
+          <div className="font-bold text-[#014BAA] uppercase tracking-wide">
+            System Specification &amp; Safety Notice
           </div>
-          <p className="mt-0.5 text-blue-800">
-            This dashboard is an academic engineering prototype designed for demonstration of autonomous fault isolation (FDIR) algorithms and root cause inference. All thresholds are configurable test parameters and do not replace certified elevator safety controllers (EN 81-20/50 or ASME A17.1).
+          <p className="mt-0.5 text-slate-600">
+            This dashboard provides autonomous fault detection, isolation, and root cause analysis (FDIR) for elevator monitoring and supervisory diagnostics. All thresholds are configurable diagnostic parameters aligned with standard elevator safety invariants (EN 81-20/50 and ASME A17.1).
           </p>
         </div>
       </div>
@@ -67,11 +67,11 @@ export const SettingsPage: React.FC = () => {
       {/* Main Settings Form */}
       <form onSubmit={handleSave} className="space-y-6">
         {/* Sensor Thresholds Card */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
-          <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-100 gap-4">
+        <div className="bg-white rounded-xl border border-[#E2D9D2] p-6 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between pb-4 border-b border-[#E2D9D2] gap-4">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-blue-600" />
+              <h2 className="text-sm font-bold text-[#014BAA] uppercase tracking-wider flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-[#014BAA]" />
                 <span>Sensor Demonstration Thresholds</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -83,7 +83,7 @@ export const SettingsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition-colors border border-slate-200"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#EFE8E2] hover:bg-[#E2D9D2] text-slate-700 flex items-center gap-1.5 transition-colors border border-[#E2D9D2]"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Restore Defaults</span>
@@ -91,9 +91,9 @@ export const SettingsPage: React.FC = () => {
 
               <button
                 type="submit"
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 transition-colors shadow-xs"
+                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-[#014BAA] hover:bg-[#003882] text-[#F8F3F0] flex items-center gap-1.5 transition-colors shadow-xs"
               >
-                {savedSuccess ? <CheckCircle2 className="w-3.5 h-3.5 text-white" /> : <Save className="w-3.5 h-3.5" />}
+                {savedSuccess ? <CheckCircle2 className="w-3.5 h-3.5 text-[#F8F3F0]" /> : <Save className="w-3.5 h-3.5" />}
                 <span>{savedSuccess ? 'Thresholds Saved!' : 'Save Changes'}</span>
               </button>
             </div>
@@ -102,15 +102,18 @@ export const SettingsPage: React.FC = () => {
           {/* Threshold Inputs Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5">
             {/* 1. Temperature Thresholds */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <div className="p-4 rounded-xl bg-[#EFE8E2]/60 border border-[#E2D9D2] space-y-3">
               <div className="flex items-center gap-2">
                 <Thermometer className="w-4 h-4 text-rose-500" />
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                  Motor Temperature (°C)
-                </h3>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                    Temperature
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-medium">Water Temperature (°C) • DS18B20</p>
+                </div>
               </div>
               <p className="text-[11px] text-slate-500">
-                Monitored via PT100 RTD sensor embedded in the motor stator core.
+                Monitored via DS18B20 waterproof temperature probe in test container.
               </p>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
@@ -121,13 +124,13 @@ export const SettingsPage: React.FC = () => {
                   <input
                     type="number"
                     step="1"
-                    min="40"
-                    max="100"
+                    min="10"
+                    max="80"
                     value={formValues.temperatureWarning}
                     onChange={e => setFormValues({ ...formValues, temperatureWarning: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 60°C</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 35°C</span>
                 </div>
 
                 <div>
@@ -137,154 +140,179 @@ export const SettingsPage: React.FC = () => {
                   <input
                     type="number"
                     step="1"
-                    min="50"
-                    max="120"
+                    min="20"
+                    max="100"
                     value={formValues.temperatureCritical}
                     onChange={e => setFormValues({ ...formValues, temperatureCritical: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 75°C</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 45°C</span>
                 </div>
               </div>
             </div>
 
-            {/* 2. Motor Current Thresholds */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            {/* 2. Current Thresholds */}
+            <div className="p-4 rounded-xl bg-[#EFE8E2]/60 border border-[#E2D9D2] space-y-3">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-500" />
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                  Motor Armature Current (A)
-                </h3>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                    Current
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-medium">LED Circuit Current (mA) • INA219</p>
+                </div>
               </div>
               <p className="text-[11px] text-slate-500">
-                Measured via LEM Hall Effect current transducer on the VFD output feeder.
+                Measured via INA219 high-side current sensor on the LED load circuit.
               </p>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="text-[11px] font-semibold text-amber-800 block mb-1">
-                    Warning Threshold (A)
+                    Warning Threshold (mA)
                   </label>
                   <input
                     type="number"
-                    step="0.1"
-                    min="1.0"
-                    max="10.0"
+                    step="0.5"
+                    min="0"
+                    max="50"
                     value={formValues.currentWarning}
                     onChange={e => setFormValues({ ...formValues, currentWarning: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 5.0 A</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 7.0 mA</span>
                 </div>
 
                 <div>
                   <label className="text-[11px] font-semibold text-rose-800 block mb-1">
-                    Critical Threshold (A)
+                    Critical Threshold (mA)
                   </label>
                   <input
                     type="number"
-                    step="0.1"
-                    min="2.0"
-                    max="15.0"
+                    step="0.5"
+                    min="0"
+                    max="50"
                     value={formValues.currentCritical}
                     onChange={e => setFormValues({ ...formValues, currentCritical: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 7.0 A</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 9.0 mA</span>
                 </div>
               </div>
             </div>
 
             {/* 3. Vibration Thresholds */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <div className="p-4 rounded-xl bg-[#EFE8E2]/60 border border-[#E2D9D2] space-y-3">
               <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-indigo-500" />
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                  Machine Vibration Velocity (mm/s)
-                </h3>
+                <Activity className="w-4 h-4 text-[#014BAA]" />
+                <div>
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                    Vibration
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-medium">Vibration Events (events/sec) • SW-420</p>
+                </div>
               </div>
               <p className="text-[11px] text-slate-500">
-                Peak RMS vibration measured at machine bedplate &amp; bearing housings.
+                Trigger events measured by SW-420 vibration sensor switch on cardboard chassis.
               </p>
 
-              <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                 <div>
-                  <label className="text-[11px] font-semibold text-amber-800 block mb-1">
-                    Warning Threshold (mm/s)
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                    Min Operating Floor (events/sec)
                   </label>
                   <input
                     type="number"
-                    step="0.1"
-                    min="1.0"
-                    max="10.0"
+                    step="1"
+                    min="0"
+                    max="200"
+                    value={formValues.vibrationLow ?? 45.0}
+                    onChange={e => setFormValues({ ...formValues, vibrationLow: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Normal Min: 45.0 ev/s</span>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-amber-800 block mb-1">
+                    Warning Threshold (events/sec)
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="200"
                     value={formValues.vibrationWarning}
                     onChange={e => setFormValues({ ...formValues, vibrationWarning: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 4.0 mm/s</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 90.0 ev/s</span>
                 </div>
 
                 <div>
                   <label className="text-[11px] font-semibold text-rose-800 block mb-1">
-                    Critical Threshold (mm/s)
+                    Critical Threshold (events/sec)
                   </label>
                   <input
                     type="number"
-                    step="0.1"
-                    min="2.0"
-                    max="15.0"
+                    step="1"
+                    min="0"
+                    max="200"
                     value={formValues.vibrationCritical}
                     onChange={e => setFormValues({ ...formValues, vibrationCritical: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 7.0 mm/s</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 135.0 ev/s</span>
                 </div>
               </div>
             </div>
 
             {/* 4. Speed & Door Hazard Thresholds */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <div className="p-4 rounded-xl bg-[#EFE8E2]/60 border border-[#E2D9D2] space-y-3">
               <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-emerald-500" />
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                  Car Velocity &amp; Door Safety (m/s)
-                </h3>
+                <Gauge className="w-4 h-4 text-[#014BAA]" />
+                <div>
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                    Speed
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-medium">Disc Rotational Speed (RPM) • TCRT5000</p>
+                </div>
               </div>
               <p className="text-[11px] text-slate-500">
-                Derived from optical quadrature rotary encoder &amp; door limit contact switches.
+                Derived from TCRT5000 infrared reflective sensor counting marks on rotating disc.
               </p>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-800 block mb-1">
-                    Nominal Max Speed (m/s)
+                    Nominal Max Speed (RPM)
                   </label>
                   <input
                     type="number"
-                    step="0.05"
-                    min="0.5"
-                    max="3.0"
+                    step="5"
+                    min="0"
+                    max="300"
                     value={formValues.speedMaxNormal}
                     onChange={e => setFormValues({ ...formValues, speedMaxNormal: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 1.75 m/s</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 60 RPM</span>
                 </div>
 
                 <div>
                   <label className="text-[11px] font-semibold text-rose-800 block mb-1">
-                    Overspeed Trip Limit (m/s)
+                    Overspeed Trip Limit (RPM)
                   </label>
                   <input
                     type="number"
-                    step="0.05"
-                    min="1.0"
-                    max="4.0"
+                    step="5"
+                    min="0"
+                    max="300"
                     value={formValues.speedCritical}
                     onChange={e => setFormValues({ ...formValues, speedCritical: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 bg-white border border-[#E2D9D2] rounded-lg text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-[#014BAA] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 2.20 m/s</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">Baseline default: 120 RPM</span>
                 </div>
               </div>
             </div>
@@ -292,10 +320,10 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         {/* System Operating Range & Hardware Parameters */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div className="border-b border-slate-100 pb-3">
+        <div className="bg-white rounded-xl border border-[#E2D9D2] p-6 shadow-xs space-y-4">
+          <div className="border-b border-[#E2D9D2] pb-3">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <ShieldCheck className="w-4 h-4 text-[#014BAA]" />
               <span>Elevator System Specifications &amp; Structural Range</span>
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -310,7 +338,7 @@ export const SettingsPage: React.FC = () => {
                 type="number"
                 value={systemParams.ratedCapacityKg}
                 onChange={e => setSystemParams({ ...systemParams, ratedCapacityKg: parseInt(e.target.value) || 1600 })}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-medium text-slate-900"
+                className="w-full px-3 py-1.5 bg-[#EFE8E2]/50 border border-[#E2D9D2] rounded-lg font-mono font-bold text-slate-900"
               />
             </div>
 
@@ -320,7 +348,7 @@ export const SettingsPage: React.FC = () => {
                 type="number"
                 value={systemParams.totalFloors}
                 onChange={e => setSystemParams({ ...systemParams, totalFloors: parseInt(e.target.value) || 12 })}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-medium text-slate-900"
+                className="w-full px-3 py-1.5 bg-[#EFE8E2]/50 border border-[#E2D9D2] rounded-lg font-mono font-bold text-slate-900"
               />
             </div>
 
@@ -331,7 +359,7 @@ export const SettingsPage: React.FC = () => {
                 step="0.1"
                 value={systemParams.ratedVelocityMs}
                 onChange={e => setSystemParams({ ...systemParams, ratedVelocityMs: parseFloat(e.target.value) || 1.5 })}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-medium text-slate-900"
+                className="w-full px-3 py-1.5 bg-[#EFE8E2]/50 border border-[#E2D9D2] rounded-lg font-mono font-bold text-slate-900"
               />
             </div>
 
@@ -341,7 +369,7 @@ export const SettingsPage: React.FC = () => {
                 type="text"
                 value={systemParams.machineType}
                 onChange={e => setSystemParams({ ...systemParams, machineType: e.target.value })}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+                className="w-full px-3 py-1.5 bg-[#EFE8E2]/50 border border-[#E2D9D2] rounded-lg text-slate-900 font-medium"
               />
             </div>
 
@@ -351,7 +379,7 @@ export const SettingsPage: React.FC = () => {
                 type="number"
                 value={systemParams.ambientMachineRoomLimitC}
                 onChange={e => setSystemParams({ ...systemParams, ambientMachineRoomLimitC: parseFloat(e.target.value) || 35 })}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-medium text-slate-900"
+                className="w-full px-3 py-1.5 bg-[#EFE8E2]/50 border border-[#E2D9D2] rounded-lg font-mono font-bold text-slate-900"
               />
             </div>
           </div>

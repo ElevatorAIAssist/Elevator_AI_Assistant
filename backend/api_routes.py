@@ -41,30 +41,17 @@ async def health_check():
 @router.get("/api/v1/telemetry")
 async def get_telemetry_compatibility():
     """
-    Direct compatibility endpoint for existing React frontend apiService.ts
-    Returns wrapped format with both parsed telemetry and raw ESP32 packet contract.
+    Direct compatibility endpoint for existing React frontend apiService.ts.
+    Returns wrapped format with parsed simulated telemetry.
+    If no actual hardware packet exists, packet is null without fabricating ADC values.
     """
     payload = processor.get_latest_payload()
-    hw_status = serial_bridge.get_status()
-
-    # Generate synthetic raw ESP32 packet representation if not directly from hardware
-    raw_packet = payload.packet
-    if raw_packet is None:
-        t = payload.telemetry
-        raw_packet = RawESP32Packet(
-            device_id="ESP32_ELEVATOR_RIG_01",
-            raw_adc_temperature=max(0.0, (t.temperature - 18.0) / 0.05),
-            raw_adc_current=max(0.0, t.current / 0.008),
-            raw_accel_vibration=max(0.0, t.vibration / 0.02),
-            raw_pulse_counter_speed=max(0.0, (t.speed / 1.5) * 1000.0),
-            gpio_door_contact=0 if t.doorClosed else 1,
-            crc32="0x9F4C2A11"
-        )
+    raw_packet_dict = payload.packet.model_dump() if payload.packet else None
 
     return {
         "connected": True,
         "source": payload.source,
-        "packet": raw_packet.model_dump(),
+        "packet": raw_packet_dict,
         "telemetry": payload.telemetry.model_dump(),
         "status": payload.status,
         "anomaly": payload.anomaly.model_dump(),
@@ -158,6 +145,33 @@ async def set_simulation_scenario(req: ScenarioRequest):
 async def get_hardware_status():
     """Return PySerial connection status, errors, and detected ports."""
     return serial_bridge.get_status()
+
+
+@router.get("/api/v1/hardware/telemetry/latest")
+async def get_latest_hardware_telemetry():
+    """Return the single latest physical demonstration rig telemetry record."""
+    status = serial_bridge.get_status()
+    record = serial_bridge.get_latest_hardware_record()
+    return {
+        "connected": status["connected"],
+        "port": status["port"],
+        "device_id": status["active_device_id"],
+        "boot_id": status["active_boot_id"],
+        "generation_id": status["generation_id"],
+        "high_water_mark": status["high_water_mark"],
+        "diagnostic_status": status["last_diagnostic_status"],
+        "telemetry": record
+    }
+
+
+@router.get("/api/v1/hardware/telemetry/history")
+async def get_hardware_telemetry_history(limit: int = Query(default=50, ge=1, le=200)):
+    """Return historical physical demonstration rig telemetry from SQLite."""
+    history = db.get_hardware_telemetry_history(limit=limit)
+    return {
+        "count": len(history),
+        "history": history
+    }
 
 
 @router.websocket("/ws/telemetry")

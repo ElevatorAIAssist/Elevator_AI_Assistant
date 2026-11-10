@@ -28,55 +28,55 @@ from hardware.esp32_serial import serial_bridge
 
 SCENARIO_PRESETS = {
     "nominal": {
-        "temperature": 42.0,
-        "current": 3.2,
-        "vibration": 1.8,
-        "speed": 1.25,
+        "temperature": 25.0,
+        "current": 4.5,
+        "vibration": 55.0,
+        "speed": 30.0,
         "doorClosed": True,
         "floor": 4,
         "direction": "up"
     },
     "warning_bearing": {
-        "temperature": 63.5,
-        "current": 5.3,
-        "vibration": 4.6,
-        "speed": 1.2,
+        "temperature": 38.0,
+        "current": 8.0,
+        "vibration": 110.0,
+        "speed": 80.0,
         "doorClosed": True,
         "floor": 6,
         "direction": "up"
     },
     "critical_thermal": {
-        "temperature": 81.5,
-        "current": 7.8,
-        "vibration": 3.8,
-        "speed": 0.85,
+        "temperature": 50.0,
+        "current": 8.0,
+        "vibration": 60.0,
+        "speed": 30.0,
         "doorClosed": True,
         "floor": 9,
         "direction": "up"
     },
     "critical_vibration": {
-        "temperature": 77.0,
-        "current": 6.8,
-        "vibration": 8.2,
-        "speed": 0.6,
+        "temperature": 38.0,
+        "current": 8.0,
+        "vibration": 145.0,
+        "speed": 45.0,
         "doorClosed": True,
         "floor": 5,
         "direction": "idle"
     },
     "door_hazard": {
-        "temperature": 44.0,
-        "current": 3.6,
-        "vibration": 2.1,
-        "speed": 1.35,
+        "temperature": 28.0,
+        "current": 6.0,
+        "vibration": 50.0,
+        "speed": 35.0,
         "doorClosed": False,  # Hazardous opening in motion!
         "floor": 7,
         "direction": "down"
     },
     "overspeed_trip": {
-        "temperature": 52.0,
-        "current": 5.9,
-        "vibration": 4.8,
-        "speed": 2.45,
+        "temperature": 32.0,
+        "current": 8.0,
+        "vibration": 60.0,
+        "speed": 135.0,
         "doorClosed": True,
         "floor": 2,
         "direction": "down"
@@ -105,6 +105,12 @@ class SensorProcessor:
         cal_vib = round(float(packet.raw_accel_vibration * 0.02), 2)
         cal_speed = round(float((packet.raw_pulse_counter_speed / 1000.0) * 1.5), 2)
         door_closed = (packet.gpio_door_contact == 0)
+
+        # Clamp calibrated values to physical sensor boundaries
+        cal_temp = max(-40.0, min(160.0, cal_temp))
+        cal_curr = max(0.0, min(60.0, cal_curr))
+        cal_vib = max(0.0, min(300.0, cal_vib))
+        cal_speed = max(0.0, min(500.0, cal_speed))
 
         reading = SensorReading(
             timestamp=time.time(),

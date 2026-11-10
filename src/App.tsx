@@ -21,12 +21,12 @@ const AppContent: React.FC = () => {
   const { operatingMode, connectionState } = useElevator();
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans">
-      {/* 1. Dark Navy Blue Sidebar */}
+    <div className="flex min-h-screen bg-[#F8F3F0] text-slate-800 font-sans">
+      {/* 1. Light Cream Sidebar with Royal Blue Accents */}
       <Sidebar currentPage={currentPage} onSelectPage={setCurrentPage} />
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#F8F3F0]">
         {/* Top Header */}
         <Header
           currentPage={currentPage}
@@ -39,14 +39,14 @@ const AppContent: React.FC = () => {
           <div
             className={`px-6 py-2.5 text-xs flex items-center justify-between border-b ${
               connectionState === 'hardware_connected'
-                ? 'bg-emerald-950 text-emerald-100 border-emerald-800'
-                : 'bg-indigo-950 text-indigo-100 border-indigo-900'
+                ? 'bg-[#014BAA] text-[#F8F3F0] border-[#003882]'
+                : 'bg-[#EFE8E2] text-[#014BAA] border-[#E2D9D2]'
             }`}
           >
             <div className="flex items-center gap-2">
               <span
                 className={`w-2 h-2 rounded-full ${
-                  connectionState === 'hardware_connected' ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'
+                  connectionState === 'hardware_connected' ? 'bg-[#F8F3F0] animate-ping' : 'bg-rose-500'
                 }`}
               />
               <span>
@@ -58,9 +58,9 @@ const AppContent: React.FC = () => {
             </div>
             <button
               onClick={() => setIsHardwareModalOpen(true)}
-              className="text-[11px] underline hover:text-white font-medium ml-4 shrink-0"
+              className="text-[11px] underline hover:opacity-80 font-medium ml-4 shrink-0"
             >
-              Hardware Diagnostics & Architecture
+              Hardware Diagnostics &amp; Architecture
             </button>
           </div>
         )}
@@ -76,14 +76,14 @@ const AppContent: React.FC = () => {
         </main>
 
         {/* Industrial Footer */}
-        <footer className="border-t border-slate-200 bg-white px-6 py-3.5 text-xs text-slate-500 flex flex-wrap items-center justify-between gap-3">
+        <footer className="border-t border-[#E2D9D2] bg-[#EFE8E2] px-6 py-3.5 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700">Autonomous Elevator FDIR Assistant</span>
+            <span className="font-bold text-[#014BAA]">Autonomous Elevator FDIR Assistant</span>
             <span>·</span>
-            <span>Educational Engineering Prototype</span>
+            <span>Elevator FDIR Diagnostic System</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400">
+          <div className="flex items-center gap-4 text-[11px] font-mono text-slate-500">
             <span>Standard: EN 81-20/50 Baseline</span>
             <span>·</span>
             <span>Unit: Traction Car 01</span>
@@ -91,12 +91,12 @@ const AppContent: React.FC = () => {
             <div className="flex items-center gap-1.5 font-medium">
               <span
                 className={`w-2 h-2 rounded-full ${
-                  connectionState === 'disconnected' ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'
+                  connectionState === 'disconnected' ? 'bg-rose-500' : 'bg-[#014BAA] animate-pulse'
                 }`}
               />
               <span
                 className={
-                  connectionState === 'disconnected' ? 'text-rose-600' : 'text-emerald-600'
+                  connectionState === 'disconnected' ? 'text-rose-600 font-semibold' : 'text-[#014BAA] font-semibold'
                 }
               >
                 {connectionState === 'simulation_active' && 'Simulation Active'}

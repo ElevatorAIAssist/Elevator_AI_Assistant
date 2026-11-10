@@ -190,7 +190,8 @@ def perform_rca(
         ))
 
     # 4. Motor Current Evaluation
-    if current >= thresholds.currentCritical:
+    curr_unit = "mA" if thresholds.currentCritical <= 50.0 else "A"
+    if current > thresholds.currentCritical:
         faults.append(RCAResult(
             id="FLT-CUR-02",
             code="E-ELE-02",
@@ -198,9 +199,9 @@ def perform_rca(
             severity="critical",
             affectedComponent="Motor Armature Windings & Drive Power Stage",
             componentCategory="drive_inverter",
-            sensorResponsible="Hall Effect AC Current Transducer (LEM)",
-            triggerValue=f"{current:.2f} A",
-            thresholdBreached=f"Exceeded critical current limit (> {thresholds.currentCritical:.2f} A)",
+            sensorResponsible="INA219 Current Sensor" if curr_unit == "mA" else "Hall Effect AC Current Transducer (LEM)",
+            triggerValue=f"{current:.2f} {curr_unit}",
+            thresholdBreached=f"Exceeded critical current limit (> {thresholds.currentCritical:.2f} {curr_unit})",
             detectedAt=now,
             isolationConfidence=95.0,
             maintenanceUrgency="Immediate Shutdown Required",
@@ -208,7 +209,7 @@ def perform_rca(
                 "HYPOTHESIS 1: Severe mechanical binding or obstruction in car safety gear or counterweight shoes.",
                 "HYPOTHESIS 2: Traction motor brake failing to lift fully (brake shoe dragging on drum/disc).",
                 "HYPOTHESIS 3: Short-circuit or ground fault in motor supply feeder cables.",
-                "HYPOTHESIS 4: VFD current sensor calibration drift or damaged inverter transistor module."
+                "HYPOTHESIS 4: Current sensor calibration drift or damaged inverter transistor module."
             ],
             recommendedActions=[
                 "Step 1: Cut motor drive torque immediately and set mechanical holding brake.",
@@ -229,9 +230,9 @@ def perform_rca(
             severity="warning",
             affectedComponent="Traction Drive Line / Counterweight Balance",
             componentCategory="traction_motor",
-            sensorResponsible="Hall Effect AC Current Transducer",
-            triggerValue=f"{current:.2f} A",
-            thresholdBreached=f"Exceeded warning current limit (> {thresholds.currentWarning:.2f} A)",
+            sensorResponsible="INA219 Current Sensor" if curr_unit == "mA" else "Hall Effect AC Current Transducer",
+            triggerValue=f"{current:.2f} {curr_unit}",
+            thresholdBreached=f"Exceeded warning current limit (> {thresholds.currentWarning:.2f} {curr_unit})",
             detectedAt=now,
             isolationConfidence=86.0,
             maintenanceUrgency="Schedule Inspection within 24 Hours",
@@ -251,7 +252,9 @@ def perform_rca(
         ))
 
     # 5. Vibration Evaluation
-    if vibration >= thresholds.vibrationCritical:
+    vib_unit = "events/sec" if thresholds.vibrationCritical > 25.0 else "mm/s"
+    vib_low = getattr(thresholds, "vibrationLow", 45.0)
+    if vibration > thresholds.vibrationCritical:
         faults.append(RCAResult(
             id="FLT-VIB-02",
             code="E-MEC-02",
@@ -259,9 +262,9 @@ def perform_rca(
             severity="critical",
             affectedComponent="Drive Machine Bearings & Deflector Sheave",
             componentCategory="bearing_gearbox",
-            sensorResponsible="Triaxial Industrial Piezoelectric Accelerometer",
-            triggerValue=f"{vibration:.2f} mm/s",
-            thresholdBreached=f"Exceeded critical vibration limit (> {thresholds.vibrationCritical:.2f} mm/s)",
+            sensorResponsible="SW-420 Vibration Sensor" if vib_unit == "events/sec" else "Triaxial Industrial Piezoelectric Accelerometer",
+            triggerValue=f"{vibration:.2f} {vib_unit}",
+            thresholdBreached=f"Exceeded critical vibration limit (> {thresholds.vibrationCritical:.2f} {vib_unit})",
             detectedAt=now,
             isolationConfidence=94.0,
             maintenanceUrgency="Immediate Shutdown Required",
@@ -290,9 +293,9 @@ def perform_rca(
             severity="warning",
             affectedComponent="Traction Sheave Bearings & Guide Rail Joints",
             componentCategory="bearing_gearbox",
-            sensorResponsible="Triaxial Accelerometer (Machine Bedplate)",
-            triggerValue=f"{vibration:.2f} mm/s",
-            thresholdBreached=f"Exceeded warning vibration limit (> {thresholds.vibrationWarning:.2f} mm/s)",
+            sensorResponsible="SW-420 Vibration Sensor" if vib_unit == "events/sec" else "Triaxial Accelerometer (Machine Bedplate)",
+            triggerValue=f"{vibration:.2f} {vib_unit}",
+            thresholdBreached=f"Exceeded warning vibration limit (> {thresholds.vibrationWarning:.2f} {vib_unit})",
             detectedAt=now,
             isolationConfidence=85.0,
             maintenanceUrgency="Schedule Inspection within 24 Hours",
@@ -310,6 +313,33 @@ def perform_rca(
                 "Tag car for automated vibration trend monitoring on subsequent travel cycles."
             ]
         ))
+    elif vibration < vib_low and (speed > 0.1 or vibration > 0):
+        faults.append(RCAResult(
+            id="FLT-VIB-00",
+            code="E-MEC-00",
+            name="Insufficient Vibration Telemetry / Below Operating Range",
+            severity="warning",
+            affectedComponent="Vibration Transducer Mounting & SW-420 Sensor",
+            componentCategory="bearing_gearbox",
+            sensorResponsible="SW-420 Digital Vibration Sensor",
+            triggerValue=f"{vibration:.2f} {vib_unit}",
+            thresholdBreached=f"Below minimum normal operating range (< {vib_low:.2f} {vib_unit})",
+            detectedAt=now,
+            isolationConfidence=80.0,
+            maintenanceUrgency="Inspect sensor mounting and wiring",
+            possibleRootCauses=[
+                "HYPOTHESIS 1: Vibration sensor detached or loose mounting on test frame.",
+                "HYPOTHESIS 2: Sensitivity potentiometer on SW-420 misadjusted.",
+                "HYPOTHESIS 3: Signal wire loose or discontinuous digital pulse train."
+            ],
+            recommendedActions=[
+                "Step 1: Check sensor bracket mechanical fastening to elevator rig.",
+                "Step 2: Calibrate SW-420 digital comparator sensitivity threshold."
+            ],
+            isolationProtocol=[
+                "Tag vibration telemetry channel for inspection."
+            ]
+        ))
 
     # 6. Compound Multi-Sensor Fault Isolation
     has_high_temp = temperature >= thresholds.temperatureWarning
@@ -318,7 +348,7 @@ def perform_rca(
 
     # Compound A: High Temp + High Current -> Stator Stress
     if has_high_temp and has_high_current:
-        sev = "critical" if (temperature >= thresholds.temperatureCritical or current >= thresholds.currentCritical) else "warning"
+        sev = "critical" if (temperature >= thresholds.temperatureCritical or current > thresholds.currentCritical) else "warning"
         faults.append(RCAResult(
             id="FLT-CMP-01",
             code="E-SYS-01",
@@ -381,7 +411,7 @@ def perform_rca(
 
     # Compound C: High Current + High Vib -> Mechanical Jam
     if has_high_current and has_high_vib:
-        sev = "critical" if (current >= thresholds.currentCritical or vibration >= thresholds.vibrationCritical) else "warning"
+        sev = "critical" if (current > thresholds.currentCritical or vibration > thresholds.vibrationCritical) else "warning"
         faults.append(RCAResult(
             id="FLT-CMP-03",
             code="E-SYS-03",

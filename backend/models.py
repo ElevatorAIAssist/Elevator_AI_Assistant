@@ -26,8 +26,8 @@ class SensorReading(BaseModel):
     timestamp: float = Field(default_factory=time.time, description="Unix epoch timestamp in seconds")
     temperature: float = Field(..., ge=-40.0, le=160.0, description="Motor stator core temperature in °C")
     current: float = Field(..., ge=0.0, le=60.0, description="Armature line current in Amperes")
-    vibration: float = Field(..., ge=0.0, le=50.0, description="Vibration velocity RMS in mm/s")
-    speed: float = Field(..., ge=0.0, le=10.0, description="Car linear travel speed in m/s")
+    vibration: float = Field(..., ge=0.0, le=300.0, description="Vibration events/sec (or mm/s)")
+    speed: float = Field(..., ge=0.0, le=500.0, description="Disc speed in RPM (or m/s)")
     doorClosed: bool = Field(default=True, description="True if hoistway/car door circuit is intact/closed")
     floor: int = Field(default=1, ge=1, le=12, description="Current landing floor (1-12)")
     direction: MovementDirection = Field(default="idle", description="Current travel direction")
@@ -84,14 +84,15 @@ class TelemetryInput(BaseModel):
 
 
 class SensorThresholds(BaseModel):
-    temperatureWarning: float = 60.0
-    temperatureCritical: float = 75.0
-    currentWarning: float = 5.0
-    currentCritical: float = 7.0
-    vibrationWarning: float = 4.0
-    vibrationCritical: float = 7.0
-    speedMaxNormal: float = 1.75
-    speedCritical: float = 2.20
+    temperatureWarning: float = 35.0
+    temperatureCritical: float = 45.0
+    currentWarning: float = 7.0
+    currentCritical: float = 9.0
+    vibrationLow: float = 45.0
+    vibrationWarning: float = 90.0
+    vibrationCritical: float = 135.0
+    speedMaxNormal: float = 60.0
+    speedCritical: float = 120.0
     doorHazardSpeedLimit: float = 0.10
 
 

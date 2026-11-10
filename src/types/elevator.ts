@@ -19,15 +19,32 @@ export interface SensorData {
   direction: 'up' | 'down' | 'idle';
 }
 
+export interface HardwareTelemetryData {
+  timestamp: number;
+  water_temp_c: number;              // DS18B20: Water Temperature (°C)
+  led_current_ma: number;            // INA219: LED Circuit Current (mA)
+  vibration_events_per_sec: number;  // SW-420: Vibration Events (events/sec)
+  disc_rpm: number;                  // TCRT5000: Disc Rotational Speed (RPM)
+  operating_state: string;           // RUNNING, IDLE, STOPPED
+  diagnostic_status?: string;        // NORMAL, NO_PULSES_WHILE_RUNNING, etc.
+  packet_id?: number;
+  device_id?: string;
+  boot_id?: string;
+  door_closed: null;
+  floor: null;
+  direction: null;
+}
+
 export interface SensorThresholds {
-  temperatureWarning: number;   // default 60°C
-  temperatureCritical: number;  // default 75°C
-  currentWarning: number;       // default 5.0 A
-  currentCritical: number;      // default 7.0 A
-  vibrationWarning: number;     // default 4.0 mm/s
-  vibrationCritical: number;    // default 7.0 mm/s
-  speedMaxNormal: number;       // default 1.75 m/s
-  speedCritical: number;        // default 2.20 m/s
+  temperatureWarning: number;   // default 35.0°C (DS18B20 Water Temperature)
+  temperatureCritical: number;  // default 45.0°C
+  currentWarning: number;       // default 7.0 mA (INA219 LED Circuit Current)
+  currentCritical: number;      // default 9.0 mA
+  vibrationLow?: number;        // default 45.0 events/sec (SW-420 Normal Min)
+  vibrationWarning: number;     // default 90.0 events/sec (SW-420 Vibration Events)
+  vibrationCritical: number;    // default 135.0 events/sec
+  speedMaxNormal: number;       // default 60.0 RPM (TCRT5000 Disc RPM)
+  speedCritical: number;        // default 120.0 RPM
   doorHazardSpeedLimit: number; // default 0.10 m/s (if door open while speed > limit -> hazard)
 }
 
