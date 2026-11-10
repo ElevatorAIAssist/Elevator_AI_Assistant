@@ -7,7 +7,7 @@ Clearly distinguishes potential hypotheses from confirmed failures.
 
 import time
 from typing import List, Dict, Any, Optional
-from models import RCAResult, SensorThresholds, MotorHealthMetrics
+from models import RCAResult, SensorThresholds, MotorHealthMetrics, SystemSeverity
 
 
 def perform_rca(
@@ -451,29 +451,37 @@ def calculate_motor_health(
     current: float,
     vibration: float,
     thresholds: Optional[SensorThresholds] = None,
-    system_status: str = "normal"
+    system_status: SystemSeverity = "normal"
 ) -> MotorHealthMetrics:
     if thresholds is None:
         thresholds = SensorThresholds()
 
     temp_ratio = max(0.0, (temperature - 20.0) / (thresholds.temperatureCritical - 20.0))
-    thermal_score = max(0, min(100, int(round(100.0 - temp_ratio * 90.0))))
+    thermal_score = max(0, min(100, round(100.0 - temp_ratio * 90.0)))
 
     current_ratio = max(0.0, current / thresholds.currentCritical)
-    electrical_score = max(0, min(100, int(round(100.0 - current_ratio * 85.0))))
+    electrical_score = max(0, min(100, round(100.0 - current_ratio * 85.0)))
 
     vib_ratio = max(0.0, vibration / thresholds.vibrationCritical)
-    mechanical_score = max(0, min(100, int(round(100.0 - vib_ratio * 95.0))))
+    mechanical_score = max(0, min(100, round(100.0 - vib_ratio * 95.0)))
 
-    overall = max(0, min(100, int(round(
+    overall = max(0, min(100, round(
         thermal_score * 0.35 + electrical_score * 0.35 + mechanical_score * 0.30
-    ))))
+    )))
+
+    valid_status: SystemSeverity
+    if system_status == "critical":
+        valid_status = "critical"
+    elif system_status == "warning":
+        valid_status = "warning"
+    else:
+        valid_status = "normal"
 
     return MotorHealthMetrics(
         overallHealthScore=overall,
         thermalStressScore=thermal_score,
         electricalStressScore=electrical_score,
         mechanicalVibrationScore=mechanical_score,
-        status=system_status
+        status=valid_status
     )
 
